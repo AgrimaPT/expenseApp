@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="mb-4 text-center">Create Shop</h2>
+        <form method="post" class="card p-4 shadow-sm bg-white">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success w-100">Create Shop</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

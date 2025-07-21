@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom-0 py-3">
+            <h2 class="mb-0">
+                <i class="fas fa-plus-circle text-primary me-2"></i>Add New Expense
+            </h2>
+        </div>
+        
+        <div class="card-body">
+            <form method="post" id="expense-form" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label for="expense-date" class="form-label">Date</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-calendar-day text-primary"></i>
+                            </span>
+                            <input type="date" name="date" id="expense-date" class="form-control form-control-lg" 
+                                   value="{{ today_date }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cart-plus text-success me-2"></i>Add Items
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3" id="item-input-row">
+                            <div class="col-md-5">
+                                <label for="item-category" class="form-label">Item</label>
+                                <select class="form-select form-select-lg" id="item-category" required>
+                                    <option value="" selected disabled>Select Item</option>
+                                    {% for cat in categories %}
+                                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="item-qty" class="form-label">Quantity</label>
+                                <input type="number" id="item-qty" class="form-control form-control-lg" 
+                                       placeholder="0" min="1" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="item-price" class="form-label">Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white">₹</span>
+                                    <input type="number" id="item-price" class="form-control form-control-lg" 
+                                           placeholder="0.00" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-success btn-lg w-100" onclick="addItem()">
+                                    <i class="fas fa-plus me-1"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list-alt text-primary me-2"></i>Expense Items
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="items-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="5%">#</th>
+                                        <th>Item</th>
+                                        <th width="12%" class="text-end">Qty</th>
+                                        <th width="15%" class="text-end">Price</th>
+                                        <th width="15%" class="text-end">Amount</th>
+                                        <th width="10%" class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-bold">Total:</td>
+                                        <td class="text-end fw-bold">₹<span id="total-amount">0.00</span></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" name="items_json" id="items-json">
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-lg px-4">
+                        <i class="fas fa-save me-2"></i>Save Expense
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let items = [];
+
+    function addItem() {
+        const catSelect = document.getElementById('item-category');
+        const catId = catSelect.value;
+        const catName = catSelect.options[catSelect.selectedIndex].text;
+        const qty = parseInt(document.getElementById('item-qty').value);
+        const price = parseFloat(document.getElementById('item-price').value);
+
+        if (!catId || isNaN(qty) || isNaN(price)) {
+            alert("Please select an item and enter valid quantity and price.");
+            return;
+        }
+
+        const amount = qty * price;
+        items.push({ 
+            catId, 
+            catName, 
+            qty, 
+            price, 
+            amount 
+        });
+
+        updateTable();
+        clearInputs();
+        document.getElementById('item-category').focus();
+    }
+
+    function updateTable() {
+        const tbody = document.querySelector('#items-table tbody');
+        tbody.innerHTML = "";
+
+        let total = 0;
+
+        items.forEach((item, index) => {
+            total += item.amount;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.catName}</td>
+                    <td class="text-end">${item.qty}</td>
+                    <td class="text-end">₹${item.price.toFixed(2)}</td>
+                    <td class="text-end">₹${item.amount.toFixed(2)}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('total-amount').innerText = total.toFixed(2);
+        document.getElementById('items-json').value = JSON.stringify(items);
+    }
+
+    function removeItem(index) {
+        if (confirm('Are you sure you want to remove this item?')) {
+            items.splice(index, 1);
+            updateTable();
+        }
+    }
+
+    function clearInputs() {
+        document.getElementById('item-qty').value = '';
+        document.getElementById('item-price').value = '';
+    }
+
+    // Form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (items.length === 0) {
+                    alert("Please add at least one expense item");
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
+                }
+                
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+        
+        // Auto-focus category field on page load
+        document.getElementById('item-category')?.focus();
+    });
+</script>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+    
+    .form-select-lg, .form-control-lg {
+        padding: 0.5rem 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .form-select-lg, .form-control-lg {
+            padding: 0.5rem 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .btn-lg {
+            padding: 0.5rem 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        #item-input-row .col-md-2 {
+            margin-top: 1rem;
+        }
+        
+        .card-header {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}

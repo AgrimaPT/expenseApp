@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-white border-bottom-0 py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+          <i class="fas fa-chart-line text-primary me-2"></i>Sale Summary
+        </h2>
+        {% if calculated %}
+        <span class="badge bg-primary rounded-pill fs-6">
+          {{ selected_date|date:"F j, Y" }}
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="POST" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="date" class="form-label">Select Date</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white">
+                <i class="fas fa-calendar-day text-primary"></i>
+              </span>
+              <input type="date" name="date" id="date" class="form-control form-control-lg"
+                     value="{{ selected_date|date:'Y-m-d' }}" required>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <label for="cash_in_box" class="form-label">Cash in Box</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white">₹</span>
+              <input type="number" step="0.01" name="cash_in_box" id="cash_in_box" 
+                     class="form-control form-control-lg" value="{{ cash_in_box }}" required>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <label for="cash_in_account" class="form-label">Cash in Account</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white">₹</span>
+              <input type="number" step="0.01" name="cash_in_account" id="cash_in_account" 
+                     class="form-control form-control-lg" value="{{ cash_in_account }}" required>
+            </div>
+          </div>
+        </div>
+        
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+          <button type="submit" class="btn btn-primary btn-lg px-4">
+            <i class="fas fa-calculator me-2"></i>Calculate
+          </button>
+        </div>
+      </form>
+
+      {% if calculated %}
+      <div class="mt-5">
+        <h4 class="mb-4">
+          <i class="fas fa-file-invoice-dollar text-primary me-2"></i>
+          Summary Details
+        </h4>
+        
+        <div class="row g-4">
+          <!-- Total Expense Card -->
+          <div class="col-md-6 col-lg-4">
+            <div class="card border-start border-3 border-danger h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="text-muted mb-2">Total Expense (Cash)</h6>
+                    <h3 class="mb-0">₹{{ total_expense }}</h3>
+                  </div>
+                  <div class="bg-danger bg-opacity-10 p-3 rounded">
+                    <i class="fas fa-money-bill-wave text-danger fa-2x"></i>
+                  </div>
+                </div>
+                <hr>
+                <ul class="list-unstyled mb-0">
+                  <li class="mb-2">
+                    <span class="text-muted">Expense Items:</span>
+                    <span class="float-end fw-bold">₹{{ expense_items_total }}</span>
+                  </li>
+                  <li>
+                    <span class="text-muted">Salary Expenses:</span>
+                    <span class="float-end fw-bold">₹{{ salary_total }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Online Payments Card -->
+          <div class="col-md-6 col-lg-4">
+            <div class="card border-start border-3 border-info h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="text-muted mb-2">Online Payments</h6>
+                    <h3 class="mb-0">₹{{ online_payment_total }}</h3>
+                  </div>
+                  <div class="bg-info bg-opacity-10 p-3 rounded">
+                    <i class="fas fa-credit-card text-info fa-2x"></i>
+                  </div>
+                </div>
+                <hr>
+                <div class="text-muted small">
+                  Digital transactions for {{ selected_date|date:"F j" }}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Sales Summary Card -->
+          <div class="col-md-6 col-lg-4">
+            <div class="card border-start border-3 border-success h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="text-muted mb-2">Total Sale</h6>
+                    <h3 class="mb-0">₹{{ total_sale }}</h3>
+                  </div>
+                  <div class="bg-success bg-opacity-10 p-3 rounded">
+                    <i class="fas fa-cash-register text-success fa-2x"></i>
+                  </div>
+                </div>
+                <hr>
+                <ul class="list-unstyled mb-0">
+                  <li class="mb-2">
+                    <span class="text-muted">Cash in Box:</span>
+                    <span class="float-end fw-bold">₹{{ cash_in_box }}</span>
+                  </li>
+                  <li>
+                    <span class="text-muted">Cash in Account:</span>
+                    <span class="float-end fw-bold">₹{{ cash_in_account }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Benefits Cards -->
+          <div class="col-md-6">
+            <div class="card border-start border-3 border-warning h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="text-muted mb-2">Daily Benefit</h6>
+                    <h3 class="mb-0">₹{{ daily_benefit }}</h3>
+                  </div>
+                  <div class="bg-warning bg-opacity-10 p-3 rounded">
+                    <i class="fas fa-sun text-warning fa-2x"></i>
+                  </div>
+                </div>
+                <hr>
+                <div class="text-muted small">
+                  Net profit for {{ selected_date|date:"F j, Y" }}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- <div class="col-md-6">
+            <div class="card border-start border-3 border-primary h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="text-muted mb-2">Monthly Benefit</h6>
+                    <h3 class="mb-0">₹{{ monthly_benefit }}</h3>
+                  </div>
+                  <div class="bg-primary bg-opacity-10 p-3 rounded">
+                    <i class="fas fa-calendar-alt text-primary fa-2x"></i>
+                  </div>
+                </div>
+                <hr>
+                <div class="text-muted small">
+                  Cumulative profit till {{ selected_date|date:"F j" }}
+                </div>
+              </div>
+            </div>
+          </div> -->
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Custom Styles */
+  .border-start {
+    border-left-width: 3px !important;
+  }
+  
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .form-control-lg {
+    padding: 0.5rem 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .input-group-text {
+    transition: all 0.2s ease;
+  }
+  
+  .input-group:focus-within .input-group-text {
+    color: #4e73df;
+    background-color: rgba(78, 115, 223, 0.1);
+  }
+  
+  @media (max-width: 768px) {
+    .form-control-lg {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+    }
+    
+    .card-body {
+      padding: 1.25rem;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .card-header {
+      padding: 1rem;
+    }
+    
+    .card-body {
+      padding: 1rem;
+    }
+    
+    .btn-lg {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus date field if empty
+    const dateField = document.getElementById('date');
+    if (dateField && !dateField.value) {
+      dateField.focus();
+    }
+    
+    // Format number inputs on blur
+    const formatCurrency = function(input) {
+      if (input.value) {
+        input.value = parseFloat(input.value).toFixed(2);
+      }
+    };
+    
+    document.getElementById('cash_in_box')?.addEventListener('blur', function() {
+      formatCurrency(this);
+    });
+    
+    document.getElementById('cash_in_account')?.addEventListener('blur', function() {
+      formatCurrency(this);
+    });
+    
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function(form) {
+      form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  });
+</script>
+
+{% endblock %}

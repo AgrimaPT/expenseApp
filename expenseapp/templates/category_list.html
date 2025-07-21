@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-2 py-md-4">
+    <div class="card">
+        <div class="card-header p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h2 class="mb-0 mb-md-2">Categories for {{ request.user.shop.name }}</h2>
+                <a href="{% url 'add_category' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1 me-md-2"></i>
+                    <span class="d-none d-md-inline">Add Category</span>
+                    <span class="d-inline d-md-none">Add</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body px-0 pt-0 pb-2">
+            <div class="table-responsive p-2 p-md-4">
+                {% if categories %}
+                <table class="table align-items-center mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">#</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Category</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td class="ps-3 ps-md-4">
+                                <span class="text-secondary text-xs font-weight-bold">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex px-2 py-1">
+                                    <div class="d-flex flex-column justify-content-center">
+                                        <h6 class="mb-0 text-sm">{{ category.name }}</h6>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end pe-3 pe-md-4">
+                                <div class="d-flex justify-content-end">
+                                    <a href="{% url 'edit_category' category.id %}" class="btn btn-sm btn-outline-warning me-1 me-md-2">
+                                        <i class="fas fa-edit d-none d-md-inline"></i>
+                                        <span class="d-inline d-md-none">Edit</span>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ category.id }}">
+                                        <i class="fas fa-trash d-none d-md-inline"></i>
+                                        <span class="d-inline d-md-none">Delete</span>
+                                    </button>
+                                </div>
+
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade" id="deleteModal{{ category.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ category.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ category.id }}">Confirm Deletion</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to permanently delete the category <strong>"{{ category.name }}"</strong>?</p>
+                                                <p class="text-danger"><small>This action cannot be undone.</small></p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form method="post" action="{% url 'delete_category' category.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fas fa-trash me-1"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center p-3 p-md-5">
+                    <i class="fas fa-folder-open fa-3x fa-md-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No categories found</h5>
+                    <p class="text-muted mb-4">Get started by adding your first category</p>
+                    <a href="{% url 'add_category' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Category
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

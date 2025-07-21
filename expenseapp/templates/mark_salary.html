@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% load custom_tags %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>Daily Salary Payments
+                </h3>
+                <span class="badge bg-white text-primary fs-6">
+                    {{ selected_date|date:"F j, Y" }}
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row justify-content-center mb-4">
+                    <div class="col-md-6 col-lg-4">
+                        <label for="date" class="form-label fw-bold">Select Date</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-calendar-day text-primary"></i>
+                            </span>
+                            <input type="date" id="date" name="date" class="form-control form-control-lg" 
+                                   value="{{ selected_date|date:'Y-m-d' }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" name="selected_date" value="{{ selected_date|date:'Y-m-d' }}">
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="35%">Staff Member</th>
+                                <th width="35%">Contact</th>
+                                <th width="30%" class="text-end">Salary Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in staff_members %}
+                            {% with existing_salaries|get_item:staff.id as existing_salary %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-3">
+                                            <span class="avatar-title bg-primary rounded-circle">
+                                                {{ staff.username|first|upper }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ staff.username }}</h6>
+                                            <small class="text-muted">ID: {{ staff.id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="mailto:{{ staff.email }}" class="text-decoration-none">
+                                        <i class="fas fa-envelope me-2 text-muted"></i>
+                                        {{ staff.email }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">₹</span>
+                                        <input type="number" name="salary_{{ staff.id }}" 
+                                               class="form-control text-end salary-input"
+                                               step="0.01" min="0" required
+                                               value="{{ existing_salary.amount|default_if_none:'' }}"
+                                               onchange="formatCurrency(this)">
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg px-4">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Salaries
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Date change handler
+    document.getElementById("date").addEventListener("change", function() {
+        const selectedDate = this.value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('date', selectedDate);
+        window.location.href = url.toString();
+    });
+
+    // Format currency inputs
+    function formatCurrency(input) {
+        if (input.value) {
+            input.value = parseFloat(input.value).toFixed(2);
+        }
+    }
+
+    // Initialize formatting on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.salary-input').forEach(input => {
+            if (input.value) {
+                input.value = parseFloat(input.value).toFixed(2);
+            }
+        });
+        
+        // Focus first salary input if empty
+        const firstInput = document.querySelector('.salary-input');
+        if (firstInput && !firstInput.value) {
+            firstInput.focus();
+        }
+    });
+
+    // Form validation
+    (function() {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+
+<style>
+    /* Custom Styles */
+    .card {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+    
+    .avatar-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        font-weight: 600;
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+    
+    .salary-input {
+        max-width: 150px;
+        margin-left: auto;
+    }
+    
+    @media (max-width: 768px) {
+        .card-header h3 {
+            font-size: 1.5rem;
+        }
+        
+        .table td {
+            padding: 0.75rem;
+        }
+        
+        .salary-input {
+            max-width: 100%;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .avatar {
+            width: 2rem;
+            height: 2rem;
+            font-size: 0.8rem;
+        }
+        
+        .table td {
+            padding: 0.5rem;
+        }
+        
+        .btn-lg {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card">
+        <div class="card-header p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Staff Members for {{ request.user.shop.name }}
+                </h4>
+                <!-- <a href="#" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1 d-none d-md-inline"></i>
+                    <span class="d-inline d-md-none">Add</span>
+                    <span class="d-none d-md-inline">Add Staff</span>
+                </a> -->
+            </div>
+        </div>
+
+        <div class="card-body px-0 pt-0 pb-2">
+            <div class="table-responsive p-2 p-md-4">
+                {% if staff_members %}
+                <table class="table align-items-center mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7">#</th>
+                            <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7">Staff Member</th>
+                            <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 d-none d-sm-table-cell">Username</th>
+                            <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 d-none d-md-table-cell">Joined On</th>
+                            <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for staff in staff_members %}
+                        <tr>
+                            <td class="ps-3 ps-md-4">
+                                <span class="text-secondary text-xs font-weight-bold">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex px-2 py-1">
+                                    <div class="d-flex flex-column justify-content-center">
+                                        <h6 class="mb-0 text-sm">{{ staff.email }}</h6>
+                                        <small class="text-muted d-sm-none">{{ staff.username }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="d-none d-sm-table-cell">
+                                <span class="text-secondary text-xs font-weight-bold">{{ staff.username }}</span>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <span class="text-secondary text-xs font-weight-bold">{{ staff.date_joined|date:"M d, Y H:i" }}</span>
+                            </td>
+                            <td class="text-end pe-3 pe-md-4">
+                                <!-- Mobile-friendly action buttons -->
+                                <div class="d-flex justify-content-end">
+                                    <!-- <a href="#" class="btn btn-sm btn-outline-info me-1 me-md-2" title="View Details">
+                                        <i class="fas fa-eye d-none d-md-inline"></i>
+                                        <span class="d-md-none">View</span>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-outline-warning me-1 me-md-2" title="Edit">
+                                        <i class="fas fa-edit d-none d-md-inline"></i>
+                                        <span class="d-md-none">Edit</span>
+                                    </a> -->
+                                    <button class="btn btn-sm btn-outline-danger" title="Remove" data-bs-toggle="modal" data-bs-target="#deleteModal{{ staff.id }}">
+                                        <i class="fas fa-trash-alt d-none d-md-inline"></i>
+                                        <span class="d-md-none">Remove</span>
+                                    </button>
+                                </div>
+
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade" id="deleteModal{{ staff.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirm Removal</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to remove <strong>{{ staff.username }}</strong> from your staff?</p>
+                                                <p class="text-danger"><small>This action will revoke their access to your shop.</small></p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form method="post" action="#">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fas fa-trash-alt me-1"></i> Remove
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center p-3 p-md-5">
+                    <i class="fas fa-user-slash fa-3x fa-md-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Staff Members Found</h5>
+                    <p class="text-muted mb-4">You haven't added any staff members to your shop yet</p>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Your First Staff Member
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

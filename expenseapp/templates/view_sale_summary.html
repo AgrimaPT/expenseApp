@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card">
+        <div class="card-header p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Daily Sale Summary
+                </h4>
+                <div>
+                    <a href="{% url 'daily_sale_summary' %}" class="btn btn-success">
+                        <i class="fas fa-plus-circle me-2"></i>Add New Summary
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row">
+                <!-- Date Selection Form -->
+                <div class="col-md-5">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title mb-4">
+                                    <i class="far fa-calendar-alt me-2"></i>Select Date
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="date" class="form-label">Choose a date</label>
+                                            <input type="date" class="form-control" name="date" 
+                                                   value="{{ selected_date|date:'Y-m-d' }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if message %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    <!-- Summary Card -->
+                    {% if summary %}
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-invoice me-2"></i>
+                                Summary for {{ selected_date|date:"F j, Y" }}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Cash in Box:</span>
+                                    <span class="badge bg-info rounded-pill fs-6">₹{{ summary.remaining_cash }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Cash in Account:</span>
+                                    <span class="badge bg-info rounded-pill fs-6">₹{{ summary.cash_in_account }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Total Sale:</span>
+                                    <span class="badge bg-success rounded-pill fs-6">₹{{ summary.total_sale }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Daily Benefit:</span>
+                                    <span class="badge bg-warning rounded-pill fs-6">₹{{ summary.daily_benefit }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Monthly Benefit:</span>
+                                    <span class="badge bg-primary rounded-pill fs-6">₹{{ summary.cumulative_monthly_benefit }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Graph Section -->
+                <div class="col-md-7">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Daily Benefit Trend (Last 7 Days)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="benefitChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Auto-submit form on date change
+    const dateInput = document.querySelector("input[name='date']");
+    const form = dateInput?.closest("form");
+    if (dateInput && form) {
+        dateInput.addEventListener("change", function () {
+            form.submit();
+        });
+    }
+
+    // Initialize chart
+    const ctx = document.getElementById('benefitChart').getContext('2d');
+
+    // Sample data - replace with actual data from your context
+    const chartData = {
+        labels: [
+            {% for day in last_7_days %}
+                "{{ day.date|date:'M j' }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Daily Benefit',
+            data: [
+                {% for day in last_7_days %}
+                    {{ day.daily_benefit|default:0 }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true
+        }]
+    };
+
+    const benefitChart = new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '₹' + context.raw.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    .card-header {
+        padding: 1rem 1.5rem;
+    }
+    .list-group-item {
+        padding: 1rem 0;
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+    .badge {
+        padding: 0.5em 0.75em;
+    }
+    #benefitChart {
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
+
+{% endblock %}

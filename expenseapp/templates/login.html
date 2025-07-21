@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-5 col-md-8 col-sm-10">
+        <div class="card shadow-lg border-0 rounded-lg">
+            <div class="card-header bg-primary text-white">
+                <h3 class="text-center font-weight-light my-4">Login</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                    <div class="form-floating mb-3">
+                        <input type="{% if 'password' in field.name %}password{% else %}text{% endif %}" 
+                               class="form-control {% if field.errors %}is-invalid{% endif %}" 
+                               id="{{ field.id_for_label }}" 
+                               name="{{ field.html_name }}" 
+                               placeholder="{{ field.label }}"
+                               value="{{ field.value|default_if_none:'' }}">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% if field.errors %}
+                            <div class="invalid-feedback">
+                                {{ field.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                        <a class="small text-muted" >Forgot Password?</a>
+                        <button type="submit" class="btn btn-primary px-4 py-2">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center py-3">
+                <div class="small">
+                    <p class="mb-1">Don't have an account?</p>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{% url 'signup' %}" class="btn btn-outline-primary btn-sm">Admin Signup</a>
+                        <a href="{% url 'staff_signup' %}" class="btn btn-outline-secondary btn-sm">Staff Signup</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        transition: transform 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .form-floating label {
+        color: #6c757d;
+    }
+    .btn-outline-primary, .btn-outline-secondary {
+        transition: all 0.3s ease;
+    }
+    @media (max-width: 576px) {
+        .card {
+            box-shadow: none;
+            border: 1px solid rgba(0,0,0,.125);
+        }
+    }
+</style>
+{% endblock %}

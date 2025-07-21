@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center">
+    <h2 class="mb-3">Welcome, {{ request.user.username }}</h2>
+    <p><strong>Shop:</strong> {{ request.user.shop.name }}</p>
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-4">
+            <a href="#" class="btn btn-outline-primary w-100 mb-2">Add Income</a>
+            <a href="#" class="btn btn-outline-secondary w-100 mb-2">Add Expense</a>
+            <a href="#" class="btn btn-outline-success w-100">My Entries</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Dashboard Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">
+                                <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                            </h3>
+                        </div>
+                        <div class="badge bg-light text-dark fs-6">
+                            <i class="fas fa-store me-1"></i> {{ request.user.shop.shop_code }}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body text-center py-4">
+                    <div class="avatar avatar-xl bg-primary bg-opacity-10 rounded-circle mb-3">
+                        <i class="fas fa-user-shield fs-2 text-primary"></i>
+                    </div>
+                    <h2 class="mb-2">Welcome, {{ request.user.username }}</h2>
+                    <p class="text-muted mb-0">Managing: <strong>{{ request.user.shop.name }}</strong></p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <!-- Income Card -->
+                <!-- <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-start border-4 border-success shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
+                                <i class="fas fa-money-bill-wave fs-3 text-success"></i>
+                            </div>
+                            <h5 class="card-title">Income</h5>
+                            <p class="text-muted small">Record daily income transactions</p>
+                            <a href="#" class="btn btn-success stretched-link">
+                                <i class="fas fa-plus me-2"></i>Add Income
+                            </a>
+                        </div>
+                    </div>
+                </div> -->
+
+                <!-- Reports Card -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-start border-4 border-success shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
+                                <i class="fas fa-chart-pie fs-3 text-success"></i>
+                            </div>
+                            <h5 class="card-title">Reports</h5>
+                            <p class="text-muted small">View financial reports</p>
+                            <a href="{% url 'view_daily_summary' %}" class="btn btn-success stretched-link">
+                                <i class="fas fa-file-alt me-2"></i>Daily Summary
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expense Card -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-start border-4 border-danger shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="bg-danger bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
+                                <i class="fas fa-receipt fs-3 text-danger"></i>
+                            </div>
+                            <h5 class="card-title">Expenses</h5>
+                            <p class="text-muted small">Manage shop expenses</p>
+                            <a href="{% url 'expense_list' %}" class="btn btn-danger stretched-link">
+                                <i class="fas fa-plus me-2"></i>Add Expense
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories Card -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-start border-4 border-info shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
+                                <i class="fas fa-tags fs-3 text-info"></i>
+                            </div>
+                            <h5 class="card-title">Categories</h5>
+                            <p class="text-muted small">View and manage categories</p>
+                            <a href="{% url 'category_list' %}" class="btn btn-info stretched-link">
+                                <i class="fas fa-eye me-2"></i>View Categories
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Management Card -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-start border-4 border-warning shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
+                                <i class="fas fa-users fs-3 text-warning"></i>
+                            </div>
+                            <h5 class="card-title">Staff</h5>
+                            <p class="text-muted small">Manage staff accounts</p>
+                            <a href="{% url 'manage_staff' %}" class="btn btn-warning stretched-link">
+                                <i class="fas fa-user-cog me-2"></i>Manage Staff
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+
+                <!-- Quick Stats Card -->
+                <!-- <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-start border-4 border-secondary shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="bg-secondary bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
+                                <i class="fas fa-chart-line fs-3 text-secondary"></i>
+                            </div>
+                            <h5 class="card-title">Quick Stats</h5>
+                            <p class="text-muted small">Today's overview</p>
+                            <a href="#" class="btn btn-secondary stretched-link" data-bs-toggle="modal" data-bs-target="#quickStatsModal">
+                                <i class="fas fa-external-link-alt me-2"></i>View Stats
+                            </a>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Modal -->
+<div class="modal fade" id="quickStatsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Today's Quick Stats</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-3">
+                                <h6 class="text-muted mb-2">Today's Income</h6>
+                                <h4 class="text-success">₹0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-3">
+                                <h6 class="text-muted mb-2">Today's Expenses</h6>
+                                <h4 class="text-danger">₹0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-3">
+                                <h6 class="text-muted mb-2">Daily Benefit</h6>
+                                <h4 class="text-primary">₹0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-3">
+                                <h6 class="text-muted mb-2">Staff Count</h6>
+                                <h4 class="text-warning">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{% url 'view_daily_summary' %}" class="btn btn-primary">View Full Report</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 0.5rem;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+    }
+    .border-start {
+        border-left-width: 4px !important;
+    }
+</style>
+{% endblock %}
