@@ -4,7 +4,7 @@ from . import views
 urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('staff-signup/', views.staff_signup_view, name='staff_signup'),
-    path('login/', views.login_view, name='login'),
+    path('', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('create-shop/', views.create_shop, name='create_shop'),  # ✅ This fixes the error
