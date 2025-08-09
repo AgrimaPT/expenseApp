@@ -2,70 +2,102 @@
 {% block content %}
 <div class="container-fluid mt-3 mt-md-4">
     <!-- Header Section -->
-    <div class=" justify-content-between align-items-start align-items-md-center mb-3 mb-md-4">
-        <div class="mb-3 mb-md-0">
-            <h2 class="mb-0 h4 h-md-3">
-                <i class="fas fa-file-invoice-dollar me-2 text-gradient-primary"></i>Expense Dashboard
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1 fw-bold text-gradient-primary">
+                <i class="fas fa-file-invoice-dollar me-2"></i>Expense Dashboard
             </h2>
-            <!-- <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">Home</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Expenses</li>
-                </ol>
-            </nav> -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-store me-1"></i> {{ shop.name }}
+                </span>
+                {% if is_supervisor %}
+                <span class="badge bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-user-shield me-1"></i> Supervisor View
+                </span>
+                {% elif is_admin %}
+                <span class="badge bg-danger bg-opacity-10 text-danger">
+                    <i class="fas fa-user-cog me-1"></i> Admin View
+                </span>
+                {% else %}
+                <span class="badge bg-info bg-opacity-10 text-info">
+                    <i class="fas fa-user me-1"></i> Staff View
+                </span>
+                {% endif %}
+            </div>
         </div>
-        <div class="btn-group shadow-sm w-100 w-md-auto">
-            <a href="{% url 'add_expense' %}" class="btn btn-primary btn-sm btn-md-lg rounded-start">
+        <div class="btn-group shadow-sm">
+            <a href="{% url 'add_expense' %}" class="btn btn-primary px-3 px-md-4 py-2">
                 <i class="fas fa-plus-circle me-1"></i> 
-                <span class="d-none d-sm-inline">Add Expense</span>
+                <span class="d-none d-md-inline">Add Expense</span>
             </a>
-            <a href="{% url 'mark_salary' %}" class="btn btn-success btn-sm btn-md-lg rounded-0">
+            <a href="{% url 'mark_salary' %}" class="btn btn-success px-3 px-md-4 py-2">
                 <i class="fas fa-money-bill-wave me-1"></i> 
-                <span class="d-none d-sm-inline">Salaries</span>
+                <span class="d-none d-md-inline">Salaries</span>
             </a>
-            <a href="{% url 'add_online_payment' %}" class="btn btn-info btn-sm btn-md-lg rounded-end">
+            <a href="{% url 'add_online_payment' %}" class="btn btn-info px-3 px-md-4 py-2">
                 <i class="fas fa-globe me-1"></i> 
-                <span class="d-none d-sm-inline">Online</span>
+                <span class="d-none d-md-inline">Online</span>
             </a>
         </div>
     </div>
 
     <!-- Date Filter -->
-    <div class="card mb-3 mb-md-4 border-0 shadow-sm">
-        <div class="card-header bg-white border-0 py-2 py-md-3">
-            <h5 class="mb-0 h6 h-md-5">
-                <i class="fas fa-calendar-alt me-2 text-muted"></i>Filter Expenses
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 py-3">
+            <h5 class="mb-0 fw-semibold">
+                <i class="fas fa-filter me-2 text-muted"></i>Filter Expenses
             </h5>
         </div>
-        <div class="card-body p-2 p-md-3">
-            <form method="get" id="dateFilterForm" class="row g-2 g-md-3 align-items-end">
-                <div class="col-12 col-md-6 col-lg-4">
-                    <label for="date" class="form-label text-muted small mb-1">Select Date</label>
+        <div class="card-body">
+            <form method="get" id="dateFilterForm" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="date" class="form-label fw-semibold">Select Date</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white">
                             <i class="fas fa-calendar-day text-primary"></i>
                         </span>
-                        <input type="date" name="date" id="date" class="form-control form-control-sm form-control-md-lg" 
+                        <input type="date" name="date" id="date" class="form-control" 
                                value="{{ selected_date|date:'Y-m-d' }}">
                     </div>
                 </div>
+                {% if is_supervisor %}
+                <div class="col-md-4">
+                    <label for="status" class="form-label fw-semibold">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Items</option>
+                        <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified Only</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Only</option>
+                    </select>
+                </div>
+                {% endif %}
+                <!-- <div class="col-md-4 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-search me-1"></i> Apply
+                    </button>
+                </div> -->
             </form>
         </div>
     </div>
 
     <!-- Summary Cards -->
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-2 g-md-3 mb-3 mb-md-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3 mb-4">
         <!-- Item Expenses Card -->
         <div class="col">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-2 p-md-3">
-                    <div class="d-flex justify-content-between align-items-center">
+            <div class="card border-0 shadow-sm h-100 hover-effect">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
                         <div>
-                            <h6 class="text-muted mb-1 mb-md-2 small">Item Expenses</h6>
-                            <h3 class="mb-0 h5 h-md-4">₹{{ items_total|floatformat:2 }}</h3>
+                            <h6 class="text-muted mb-2">Distributor Expenses</h6>
+                            <h3 class="mb-1 fw-bold">₹{{ verified_items_total|floatformat:2 }}</h3>
+                            {% if is_supervisor %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning">
+                                Pending: ₹{{ pending_items_total|floatformat:2 }}
+                            </span>
+                            {% endif %}
                         </div>
-                        <div class="bg-primary bg-opacity-10 p-2 p-md-3 rounded">
-                            <i class="fas fa-shopping-cart fa-lg fa-md-2x text-primary"></i>
+                        <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-3">
+                            <i class="fas fa-truck"></i>
                         </div>
                     </div>
                 </div>
@@ -74,15 +106,20 @@
 
         <!-- Salaries Card -->
         <div class="col">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-2 p-md-3">
-                    <div class="d-flex justify-content-between align-items-center">
+            <div class="card border-0 shadow-sm h-100 hover-effect">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
                         <div>
-                            <h6 class="text-muted mb-1 mb-md-2 small">Salaries</h6>
-                            <h3 class="mb-0 h5 h-md-4">₹{{ salary_total|floatformat:2 }}</h3>
+                            <h6 class="text-muted mb-2">Salaries</h6>
+                            <h3 class="mb-1 fw-bold">₹{{ verified_salary_total|floatformat:2 }}</h3>
+                            {% if is_supervisor %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning">
+                                Pending: ₹{{ pending_salary_total|floatformat:2 }}
+                            </span>
+                            {% endif %}
                         </div>
-                        <div class="bg-success bg-opacity-10 p-2 p-md-3 rounded">
-                            <i class="fas fa-user-tie fa-lg fa-md-2x text-success"></i>
+                        <div class="icon-shape bg-success bg-opacity-10 text-success rounded-3">
+                            <i class="fas fa-user-tie"></i>
                         </div>
                     </div>
                 </div>
@@ -91,15 +128,20 @@
 
         <!-- Online Payments Card -->
         <div class="col">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-2 p-md-3">
-                    <div class="d-flex justify-content-between align-items-center">
+            <div class="card border-0 shadow-sm h-100 hover-effect">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
                         <div>
-                            <h6 class="text-muted mb-1 mb-md-2 small">Online Payments</h6>
-                            <h3 class="mb-0 h5 h-md-4">₹{{ online_total|floatformat:2 }}</h3>
+                            <h6 class="text-muted mb-2">Online Payments</h6>
+                            <h3 class="mb-1 fw-bold">₹{{ verified_online_total|floatformat:2 }}</h3>
+                            {% if is_supervisor %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning">
+                                Pending: ₹{{ pending_online_total|floatformat:2 }}
+                            </span>
+                            {% endif %}
                         </div>
-                        <div class="bg-info bg-opacity-10 p-2 p-md-3 rounded">
-                            <i class="fas fa-credit-card fa-lg fa-md-2x text-info"></i>
+                        <div class="icon-shape bg-info bg-opacity-10 text-info rounded-3">
+                            <i class="fas fa-credit-card"></i>
                         </div>
                     </div>
                 </div>
@@ -108,17 +150,21 @@
 
         <!-- Total Expenses Card -->
         <div class="col">
-            <div class="card border-0 shadow-sm h-100 bg-gradient-dark">
-                <div class="card-body text-white p-2 p-md-3">
-                    <div class="d-flex justify-content-between align-items-center">
+            <div class="card border-0 shadow-sm h-100 bg-gradient-primary text-white hover-effect">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
                         <div>
-                            <h6 class="mb-1 mb-md-2 small">Total Expenses</h6>
-                            <h3 class="mb-0 h5 h-md-4">₹{{ total_expense|floatformat:2 }}</h3>
-                            <p class="mb-0 small d-none d-sm-block">{{ selected_date|date:"F j, Y" }}</p>
+                            <h6 class="mb-2">Total Verified</h6>
+                            <h3 class="mb-1 fw-bold">₹{{ total_verified_expense|floatformat:2 }}</h3>
+                            {% if is_supervisor %}
+                            <span class="badge bg-white text-primary">
+                                Pending: ₹{{ total_pending_expense|floatformat:2 }}
+                            </span>
+                            {% endif %}
                         </div>
-                        <div class="p-2 p-md-3 rounded">
-                            <i class="fas fa-chart-pie fa-lg fa-md-2x"></i>
-                        </div>
+                        <div class="icon-container rounded-3 d-flex align-items-center justify-content-center" style="width: 3rem; height: 3rem;">
+    <i class="fas fa-chart-pie fs-5"></i>
+</div>
                     </div>
                 </div>
             </div>
@@ -126,71 +172,42 @@
     </div>
 
     <!-- Tabs Navigation -->
-    <!-- <div class="mb-3 mb-md-4">
-        <div class="nav-tabs-scrollable">
-            <ul class="nav nav-tabs flex-nowrap" id="expenseTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab">
-                        <i class="fas fa-shopping-cart me-1 me-md-2"></i>
-                        <span class="d-none d-sm-inline">Items</span>
-                        <span class="badge bg-primary ms-1 ms-md-2">{{ item_expenses_count }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="salaries-tab" data-bs-toggle="tab" data-bs-target="#salaries" type="button" role="tab">
-                        <i class="fas fa-user-tie me-1 me-md-2"></i>
-                        <span class="d-none d-sm-inline">Salaries</span>
-                        <span class="badge bg-success ms-1 ms-md-2">{{ salary_entries.count }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab">
-                        <i class="fas fa-credit-card me-1 me-md-2"></i>
-                        <span class="d-none d-sm-inline">Online</span>
-                        <span class="badge bg-info ms-1 ms-md-2">{{ online_payments.count }}</span>
-                    </button>
-                </li>
-            </ul>
-        </div>
-    </div> -->
-
-    <div class="mb-3 mb-md-4">
-    <div class="nav-tabs-scrollable">
-        <ul class="nav nav-tabs nav-tabs-custom flex-nowrap" id="expenseTabs" role="tablist">
-            <li class="nav-item flex-shrink-0" role="presentation">
-                <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab" aria-controls="items" aria-selected="true">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-shopping-cart me-1 me-md-2"></i>
-                        <span class="d-none d-sm-inline">Items</span>
-                        <span class="badge bg-primary ms-1 ms-md-2">{{ item_expenses_count }}</span>
-                    </div>
-                </button>
-            </li>
-            <li class="nav-item flex-shrink-0" role="presentation">
-                <button class="nav-link" id="salaries-tab" data-bs-toggle="tab" data-bs-target="#salaries" type="button" role="tab" aria-controls="salaries" aria-selected="false">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-user-tie me-1 me-md-2"></i>
-                        <span class="d-none d-sm-inline">Salaries</span>
-                        <span class="badge bg-success ms-1 ms-md-2">{{ salary_entries.count }}</span>
-                    </div>
-                </button>
-            </li>
-            <li class="nav-item flex-shrink-0" role="presentation">
-                <button class="nav-link" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab" aria-controls="online" aria-selected="false">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-credit-card me-1 me-md-2"></i>
-                        <span class="d-none d-sm-inline">Online</span>
-                        <span class="badge bg-info ms-1 ms-md-2">{{ online_payments.count }}</span>
-                    </div>
-                </button>
-            </li>
-        </ul>
-    </div>
-</div>
+    <ul class="nav nav-tabs mb-3" id="expenseTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab">
+            <i class="fas fa-truck"></i>
+            <span class="d-none d-md-inline ms-2">Distributors</span>
+            <span class="badge bg-primary ms-1 ms-md-2">{{ item_expenses.count }}</span>
+            {% if is_supervisor and pending_items_count > 0 %}
+            <span class="badge bg-warning ms-1">{{ pending_items_count }}</span>
+            {% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="salaries-tab" data-bs-toggle="tab" data-bs-target="#salaries" type="button" role="tab">
+            <i class="fas fa-user-tie"></i>
+            <span class="d-none d-md-inline ms-2">Salaries</span>
+            <span class="badge bg-success ms-1 ms-md-2">{{ salary_entries.count }}</span>
+            {% if is_supervisor and pending_salaries_count > 0 %}
+            <span class="badge bg-warning ms-1">{{ pending_salaries_count }}</span>
+            {% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab">
+            <i class="fas fa-credit-card"></i>
+            <span class="d-none d-md-inline ms-2">Online</span>
+            <span class="badge bg-info ms-1 ms-md-2">{{ online_payments.count }}</span>
+            {% if is_supervisor and pending_online_count > 0 %}
+            <span class="badge bg-warning ms-1">{{ pending_online_count }}</span>
+            {% endif %}
+        </button>
+    </li>
+</ul>
 
     <!-- Tabs Content -->
     <div class="tab-content" id="expenseTabsContent">
-        <!-- Item Expenses Tab -->
+        <!-- Distributor Expenses Tab -->
         <div class="tab-pane fade show active" id="items" role="tabpanel">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-0">
@@ -198,69 +215,97 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-3 ps-md-4">Date</th>
-                                    <th>Category</th>
-                                    <th class="text-end">Qty</th>
-                                    <th class="text-end">Price</th>
-                                    <th class="text-end pe-3 pe-md-4">Amount</th>
+                                    {% if is_supervisor %}
+                                    <th width="40" class="text-center">
+                                        <input type="checkbox" id="selectAllItems" class="form-check-input">
+                                    </th>
+                                    {% endif %}
+                                    <th>Date</th>
+                                    <th>Distributor</th>
+                                    <th>Type</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-center">Status</th>
+                                    {% if is_staff %}
+                                    <th>Added By</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for expense in expenses %}
-                                    {% if expense.items.all %}
-                                        {% for item in expense.items.all %}
-                                        <tr class="cursor-pointer" onclick="window.location='#'">
-                                            <td class="ps-3 ps-md-4">{{ expense.date|date:"M j, Y" }}</td>
-                                            <td>
-                                                <span class="badge bg-primary bg-opacity-10 text-primary">
-                                                    {{ item.category.name }}
-                                                </span>
-                                            </td>
-                                            <td class="text-end">{{ item.quantity }}</td>
-                                            <td class="text-end">₹{{ item.price }}</td>
-                                            <td class="text-end fw-bold pe-3 pe-md-4">₹{{ item.amount|floatformat:2 }}</td>
-                                        </tr>
-                                        {% endfor %}
+                                {% for item in item_expenses %}
+                                <tr>
+                                    {% if is_supervisor %}
+                                    <td class="text-center">
+                                        <input type="checkbox" value="{{ item.id }}" 
+                                               class="form-check-input verify-checkbox" 
+                                               {% if item.is_verified %}checked disabled{% endif %}>
+                                    </td>
                                     {% endif %}
+                                    <td>{{ item.date|date:"M j, Y" }}</td>
+                                    <td>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                                            {{ item.distributor.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            {{ item.distributor.get_type_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-bold">₹{{ item.amount|floatformat:2 }}</td>
+                                    <td class="text-center">
+                                        {% if item.is_verified %}
+                                            <span class="badge bg-success bg-opacity-10 text-success">
+                                                <i class="fas fa-check-circle me-1"></i> Verified
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning">
+                                                <i class="fas fa-clock me-1"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    {% if is_staff %}
+                                    <td>{{ item.expense.added_by.username|default:"-" }}</td>
+                                    {% endif %}
+                                </tr>
                                 {% empty %}
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">
-                                            <i class="fas fa-info-circle fa-lg fa-md-2x mb-3"></i>
-                                            <h5 class="h6 h-md-5">No expenses found</h5>
-                                            <p class="mb-0 small">Add your first expense by clicking the button above</p>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="{% if is_supervisor %}7{% else %}6{% endif %}" class="text-center py-5">
+                                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                                        <h5 class="fw-semibold">No distributor expenses</h5>
+                                        <p class="text-muted">Add expenses using the button above</p>
+                                    </td>
+                                </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-2 py-md-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-muted small">
-                            Showing {{ item_expenses_count }} items
+                
+                {% if is_supervisor and item_expenses %}
+                <div class="card-footer bg-white border-0 py-3">
+                    <form method="post" id="verifyItemsForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_type" value="expense_item">
+                        <input type="hidden" name="selected_items" id="selectedItems" value="">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllItemsFooter">
+                                <label class="form-check-label small" for="selectAllItemsFooter">
+                                    
+                                </label>
+                            </div>
+                            <div class="btn-group">
+                                <button type="submit" name="action" value="verify" class="btn btn-success">
+                                    <i class="fas fa-check-circle me-1"></i> Verify
+                                </button>
+                                <!-- <button type="submit" name="action" value="unverify" class="btn btn-warning">
+                                    <i class="fas fa-undo me-1"></i> Unverify
+                                </button> -->
+                            </div>
                         </div>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination pagination-sm mb-0">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1">
-                                        <span class="d-none d-md-inline">Previous</span>
-                                        <span class="d-md-none">&laquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item d-none d-md-block"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">
-                                        <span class="d-none d-md-inline">Next</span>
-                                        <span class="d-md-none">&raquo;</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
+                    </form>
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -272,36 +317,66 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-3 ps-md-4">Date</th>
+                                    {% if is_supervisor %}
+                                    <th width="40" class="text-center">
+                                        <input type="checkbox" id="selectAllSalaries" class="form-check-input">
+                                    </th>
+                                    {% endif %}
+                                    <th>Date</th>
                                     <th>Employee</th>
-                                    <th class="text-end pe-3 pe-md-4">Amount</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-center">Status</th>
+                                    {% if is_staff %}
+                                    <th>Added By</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for salary in salary_entries %}
-                                <tr class="cursor-pointer" onclick="window.location='#'">
-                                    <td class="ps-3 ps-md-4">{{ salary.date|date:"M j, Y" }}</td>
+                                <tr>
+                                    {% if is_supervisor %}
+                                    <td class="text-center">
+                                        <input type="checkbox" value="{{ salary.id }}" 
+                                               class="form-check-input verify-salary-checkbox" 
+                                               {% if salary.is_verified %}checked disabled{% endif %}>
+                                    </td>
+                                    {% endif %}
+                                    <td>{{ salary.date|date:"M j, Y" }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="avatar avatar-sm me-2 me-md-3">
+                                            <div class="avatar avatar-sm me-3">
                                                 <span class="avatar-title bg-primary rounded-circle">
-                                                    {{ salary.employee.username|first|upper }}
+                                                    {{ salary.employee.name|first|upper }}
                                                 </span>
                                             </div>
                                             <div>
-                                                <h6 class="mb-0 h6 h-md-5">{{ salary.employee.username }}</h6>
-                                                <small class="text-muted d-none d-md-block">ID: {{ salary.employee.id }}</small>
+                                                <h6 class="mb-0">{{ salary.employee.name }}</h6>
+                                                <small class="text-muted">{{ salary.employee.position }}</small>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-end fw-bold pe-3 pe-md-4">₹{{ salary.amount|floatformat:2 }}</td>
+                                    <td class="text-end fw-bold">₹{{ salary.amount|floatformat:2 }}</td>
+                                    <td class="text-center">
+                                        {% if salary.is_verified %}
+                                            <span class="badge bg-success bg-opacity-10 text-success">
+                                                <i class="fas fa-check-circle me-1"></i> Verified
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning">
+                                                <i class="fas fa-clock me-1"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    {% if is_staff %}
+                                    <td>{{ salary.expense.added_by.username|default:"-" }}</td>
+                                    {% endif %}
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="3" class="text-center py-5 text-muted">
-                                        <i class="fas fa-info-circle fa-lg fa-md-2x mb-3"></i>
-                                        <h5 class="h6 h-md-5">No salary entries found</h5>
-                                        <p class="mb-0 small">Add salary records by clicking the button above</p>
+                                    <td colspan="{% if is_supervisor %}6{% else %}5{% endif %}" class="text-center py-5">
+                                        <i class="fas fa-user-tie fa-3x text-muted mb-3"></i>
+                                        <h5 class="fw-semibold">No salary entries</h5>
+                                        <p class="text-muted">Add salaries using the button above</p>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -309,32 +384,32 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-2 py-md-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-muted small">
-                            Showing {{ salary_entries.count }} entries
+                
+                {% if is_supervisor and salary_entries %}
+                <div class="card-footer bg-white border-0 py-3">
+                    <form method="post" id="verifySalariesForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_type" value="salary">
+                        <input type="hidden" name="selected_items" id="selectedSalaries" value="">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllSalariesFooter">
+                                <label class="form-check-label small" for="selectAllSalariesFooter">
+                                    Select all visible salaries
+                                </label>
+                            </div>
+                            <div class="btn-group">
+                                <button type="submit" name="action" value="verify" class="btn btn-success">
+                                    <i class="fas fa-check-circle me-1"></i> Verify
+                                </button>
+                                <button type="submit" name="action" value="unverify" class="btn btn-warning">
+                                    <i class="fas fa-undo me-1"></i> Unverify
+                                </button>
+                            </div>
                         </div>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination pagination-sm mb-0">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1">
-                                        <span class="d-none d-md-inline">Previous</span>
-                                        <span class="d-md-none">&laquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item d-none d-md-block"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">
-                                        <span class="d-none d-md-inline">Next</span>
-                                        <span class="d-md-none">&raquo;</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
+                    </form>
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -346,45 +421,60 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-3 ps-md-4">Date</th>
-                                    <th>Category</th>
-                                    <th class="d-none d-md-table-cell">Bill No</th>
-                                    <th>Bill</th>
-                                    <th class="text-end">Qty</th>
-                                    <th class="text-end">Price</th>
-                                    <th class="text-end pe-3 pe-md-4">Amount</th>
+                                    {% if is_supervisor %}
+                                    <th width="40" class="text-center">
+                                        <input type="checkbox" id="selectAllOnline" class="form-check-input">
+                                    </th>
+                                    {% endif %}
+                                    <th>Date</th>
+                                    <th>Distributor</th>
+                                    <th>Invoice No</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-center">Status</th>
+                                    {% if is_staff %}
+                                    <th>Added By</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for payment in online_payments %}
-                                <tr class="cursor-pointer" onclick="window.location='#'">
-                                    <td class="ps-3 ps-md-4">{{ payment.expense.date|date:"M j, Y" }}</td>
+                                <tr>
+                                    {% if is_supervisor %}
+                                    <td class="text-center">
+                                        <input type="checkbox" value="{{ payment.id }}" 
+                                               class="form-check-input verify-online-checkbox" 
+                                               {% if payment.is_verified %}checked disabled{% endif %}>
+                                    </td>
+                                    {% endif %}
+                                    <td>{{ payment.date|date:"M j, Y" }}</td>
                                     <td>
                                         <span class="badge bg-info bg-opacity-10 text-info">
-                                            {{ payment.category.name }}
+                                            {{ payment.distributor.name }}
                                         </span>
                                     </td>
-                                    <td class="d-none d-md-table-cell">{{ payment.bill_number }}</td>
-                                    <td>
-                                        {% if payment.bill_image %}
-                                            <a href="{{ payment.bill_image.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye me-1 d-none d-md-inline"></i>
-                                                <span class="d-md-none">View</span>
-                                            </a>
+                                    <td>{{ payment.invoice_number|default:"-" }}</td>
+                                    <td class="text-end fw-bold">₹{{ payment.amount|floatformat:2 }}</td>
+                                    <td class="text-center">
+                                        {% if payment.is_verified %}
+                                            <span class="badge bg-success bg-opacity-10 text-success">
+                                                <i class="fas fa-check-circle me-1"></i> Verified
+                                            </span>
                                         {% else %}
-                                            <span class="badge bg-secondary">No Bill</span>
+                                            <span class="badge bg-warning bg-opacity-10 text-warning">
+                                                <i class="fas fa-clock me-1"></i> Pending
+                                            </span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-end">{{ payment.quantity }}</td>
-                                    <td class="text-end">₹{{ payment.price }}</td>
-                                    <td class="text-end fw-bold pe-3 pe-md-4">₹{{ payment.amount|floatformat:2 }}</td>
+                                    {% if is_staff %}
+                                    <td>{{ payment.expense.added_by.username|default:"-" }}</td>
+                                    {% endif %}
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
-                                        <i class="fas fa-info-circle fa-lg fa-md-2x mb-3"></i>
-                                        <h5 class="h6 h-md-5">No online payments found</h5>
-                                        <p class="mb-0 small">Add online payment records by clicking the button above</p>
+                                    <td colspan="{% if is_supervisor %}7{% else %}6{% endif %}" class="text-center py-5">
+                                        <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                                        <h5 class="fw-semibold">No online payments</h5>
+                                        <p class="text-muted">Add payments using the button above</p>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -392,328 +482,285 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 py-2 py-md-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-muted small">
-                            Showing {{ online_payments.count }} payments
+                
+                {% if is_supervisor and online_payments %}
+                <div class="card-footer bg-white border-0 py-3">
+                    <form method="post" id="verifyOnlineForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_type" value="online_payment">
+                        <input type="hidden" name="selected_items" id="selectedOnline" value="">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllOnlineFooter">
+                                <label class="form-check-label small" for="selectAllOnlineFooter">
+                                    Select all visible payments
+                                </label>
+                            </div>
+                            <div class="btn-group">
+                                <button type="submit" name="action" value="verify" class="btn btn-success">
+                                    <i class="fas fa-check-circle me-1"></i> Verify
+                                </button>
+                                <button type="submit" name="action" value="unverify" class="btn btn-warning">
+                                    <i class="fas fa-undo me-1"></i> Unverify
+                                </button>
+                            </div>
                         </div>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination pagination-sm mb-0">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1">
-                                        <span class="d-none d-md-inline">Previous</span>
-                                        <span class="d-md-none">&laquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item d-none d-md-block"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">
-                                        <span class="d-none d-md-inline">Next</span>
-                                        <span class="d-md-none">&raquo;</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
+                    </form>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- <script>
-    document.getElementById('date').addEventListener('change', function() {
-        document.getElementById('dateFilterForm').submit();
-    });
-    
-    // Make table rows clickable
-    document.querySelectorAll('.cursor-pointer').forEach(row => {
-        row.addEventListener('click', function() {
-            window.location = this.getAttribute('data-href') || '#';
-        });
-    });
-</script> -->
-
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-  // Auto-submit date filter form
-  const dateInput = document.getElementById('date');
-  if (dateInput) {
-    dateInput.addEventListener('change', function() {
-      this.closest('form').submit();
-    });
-  }
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit date filter form
+    const dateInput = document.getElementById('date');
+    const statusSelect = document.getElementById('status');
+    
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    }
+    
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    }
 
-  // Make table rows clickable
-  document.querySelectorAll('.cursor-pointer').forEach(row => {
-    row.addEventListener('click', function() {
-      const href = this.dataset.href;
-      if (href) {
-        window.location.href = href;
-      }
-    });
-  });
-
-  // Tab scrolling behavior
-  const tabLinks = document.querySelectorAll('.nav-tabs .nav-link');
-  const tabContainer = document.querySelector('.nav-tabs-scrollable');
-  
-  if (tabContainer && tabLinks.length > 0) {
-    tabLinks.forEach(tab => {
-      tab.addEventListener('click', function(e) {
-        // Only scroll if it's not the active tab
-        if (!this.classList.contains('active')) {
-          const tabRect = this.getBoundingClientRect();
-          const containerRect = tabContainer.getBoundingClientRect();
-          const scrollLeft = tabContainer.scrollLeft;
-          const targetScroll = scrollLeft + (tabRect.left - containerRect.left) - (containerRect.width / 2) + (tabRect.width / 2);
-          
-          tabContainer.scrollTo({
-            left: targetScroll,
-            behavior: 'smooth'
-          });
+    // Checkbox handling for each tab
+    function setupCheckboxHandlers(selectAllId, checkboxesClass, hiddenFieldId) {
+        const selectAll = document.getElementById(selectAllId);
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.' + checkboxesClass + ':not(:disabled)');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateSelectedItems(hiddenFieldId, checkboxesClass);
+                
+                // Also update footer checkbox
+                const footerSelectAll = document.getElementById(selectAllId + 'Footer');
+                if (footerSelectAll) {
+                    footerSelectAll.checked = this.checked;
+                }
+            });
         }
-      });
-    });
-  }
+        
+        const footerSelectAll = document.getElementById(selectAllId + 'Footer');
+        if (footerSelectAll) {
+            footerSelectAll.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.' + checkboxesClass + ':not(:disabled)');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateSelectedItems(hiddenFieldId, checkboxesClass);
+                
+                // Also update header checkbox
+                const headerSelectAll = document.getElementById(selectAllId);
+                if (headerSelectAll) {
+                    headerSelectAll.checked = this.checked;
+                }
+            });
+        }
+        
+        // Update when individual checkboxes change
+        document.querySelectorAll('.' + checkboxesClass).forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateSelectedItems(hiddenFieldId, checkboxesClass);
+            });
+        });
+    }
+    
+    // Update hidden field with selected item IDs
+    function updateSelectedItems(hiddenFieldId, checkboxesClass) {
+        const checkboxes = document.querySelectorAll('.' + checkboxesClass + ':checked:not(:disabled)');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        document.getElementById(hiddenFieldId).value = selectedIds.join(',');
+    }
+    
+    // Setup handlers for each tab
+    setupCheckboxHandlers('selectAllItems', 'verify-checkbox', 'selectedItems');
+    setupCheckboxHandlers('selectAllSalaries', 'verify-salary-checkbox', 'selectedSalaries');
+    setupCheckboxHandlers('selectAllOnline', 'verify-online-checkbox', 'selectedOnline');
 
-  // Initialize tooltips
-  if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-  }
-
-  // Responsive table enhancements
-  function setupResponsiveTables() {
-    document.querySelectorAll('.table-responsive').forEach(tableContainer => {
-      const table = tableContainer.querySelector('table');
-      if (table && window.innerWidth < 768) {
-        // Add mobile-specific classes
-        table.classList.add('table-mobile');
-      }
-    });
-  }
-
-  // Run on load and resize
-  setupResponsiveTables();
-  window.addEventListener('resize', setupResponsiveTables);
+    // Form submission validation
+    function setupFormValidation(formId, hiddenFieldId) {
+        const form = document.getElementById(formId);
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const selectedItems = this.querySelector('#' + hiddenFieldId).value;
+                if (!selectedItems) {
+                    e.preventDefault();
+                    alert('Please select at least one item to perform this action');
+                    return false;
+                }
+            });
+        }
+    }
+    
+    setupFormValidation('verifyItemsForm', 'selectedItems');
+    setupFormValidation('verifySalariesForm', 'selectedSalaries');
+    setupFormValidation('verifyOnlineForm', 'selectedOnline');
 });
 </script>
 
 <style>
-    /* Base Styles */
-    /* BASE STYLES */
-:root {
-  --primary-color: #4e73df;
-  --primary-light: rgba(78, 115, 223, 0.1);
-  --success-color: #1cc88a;
-  --info-color: #36b9cc;
-  --warning-color: #f6c23e;
-  --danger-color: #e74a3b;
-  --dark-color: #5a5c69;
-  --light-color: #f8f9fc;
-  --border-color: #e3e6f0;
-  --text-muted: #858796;
+    /* Custom Styles */
+    .card {
+        border-radius: 0.75rem;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .hover-effect:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+    }
+    
+    .table th {
+        border-top: none;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        border-color: #f8f9fa;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
+    }
+    
+    .avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+    }
+    
+    .avatar-sm {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+    
+    .avatar-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        font-weight: 600;
+    }
+    
+    .icon-shape {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.25rem;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+    
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        color: #6c757d;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #4e73df;
+        border-bottom: 3px solid #4e73df;
+        background-color: transparent;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: #4e73df;
+        border-bottom: 3px solid rgba(78, 115, 223, 0.3);
+    }
+
+    .icon-container {
+    /* Ensures the container is visible */
+    display: inline-flex;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 0.5rem;
+    align-items: center;
+    justify-content: center;
 }
 
-body {
-  background-color: var(--light-color);
-  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
-  line-height: 1.6;
+/* If using in a dark background element */
+.bg-gradient-primary .icon-container {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
-/* LAYOUT STYLES */
-.container-fluid {
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+/* If using in a light background element */
+.bg-white .icon-container {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--bs-primary); /* Or your preferred icon color */
 }
-
-@media (max-width: 576px) {
-  .container-fluid {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-}
-
-/* CARD STYLES */
-.card {
-  border: none;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.15rem 0.5rem rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  margin-bottom: 1.5rem;
-}
-
-.card:hover {
-  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-  background-color: white;
-  border-bottom: 1px solid var(--border-color);
-  padding: 1rem 1.5rem;
-}
-
-.card-body {
-  padding: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .card-body {
-    padding: 1rem;
-  }
-}
-
-/* TYPOGRAPHY */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-}
-
-.text-gradient-primary {
-  background: linear-gradient(90deg, var(--primary-color), #224abe);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* BUTTONS */
-.btn {
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  transition: all 0.2s ease;
-}
-
-.btn-sm {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
-}
-
-.btn-lg {
-  padding: 0.75rem 1.5rem;
-}
-
-.btn-group {
-  box-shadow: 0 0.15rem 0.5rem rgba(0, 0, 0, 0.05);
-}
-
-/* TAB NAVIGATION */
-.nav-tabs-scrollable {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 8px;
-}
-
-.nav-tabs {
-  border-bottom: 1px solid var(--border-color);
-  flex-wrap: nowrap;
-  display: inline-flex;
-}
-
-.nav-tabs .nav-link {
-  border: none;
-  color: var(--text-muted);
-  font-weight: 600;
-  padding: 0.75rem 1.25rem;
-  white-space: nowrap;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.nav-tabs .nav-link.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-}
-
-.nav-tabs .nav-link:not(.active):hover {
-  color: var(--primary-color);
-  background-color: var(--primary-light);
-}
-
-/* TABLES */
-.table {
-  width: 100%;
-  margin-bottom: 0;
-}
-
-.table th {
-  border-top: none;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  padding: 1rem 0.75rem;
-}
-
-.table td {
-  padding: 1rem 0.75rem;
-  vertical-align: middle;
-}
-
-.table-hover tbody tr:hover {
-  background-color: var(--primary-light);
-}
-
-/* BADGES */
-.badge {
-  font-weight: 600;
-  padding: 0.35em 0.65em;
-  font-size: 0.75rem;
-}
-
-/* UTILITY CLASSES */
-.avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  background-color: var(--primary-light);
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-.bg-gradient-dark {
-  background: linear-gradient(135deg, var(--dark-color), #373840);
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-/* RESPONSIVE ADJUSTMENTS */
-@media (max-width: 768px) {
-  .table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .table th, 
-  .table td {
-    padding: 0.75rem 0.5rem;
-  }
-  
-  .nav-tabs .nav-link {
-    padding: 0.75rem 1rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .btn-group .btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-  }
-  
-  .card-header {
-    padding: 0.75rem 1rem;
-  }
-}
+    
+    @media (max-width: 768px) {
+        .btn-group {
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+        }
+        
+        .nav-tabs .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .d-flex.flex-md-row {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .table-responsive {
+            border-radius: 0.5rem;
+            border: 1px solid #e9ecef;
+        }
+    }
 </style>
 {% endblock %}

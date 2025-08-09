@@ -1,99 +1,223 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="card">
-        <div class="card-header p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-chart-line me-2"></i>Daily Sale Summary
-                </h4>
-                <div>
-                    <a href="{% url 'daily_sale_summary' %}" class="btn btn-success">
-                        <i class="fas fa-plus-circle me-2"></i>Add New Summary
-                    </a>
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-primary text-white p-4">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                        <div class="mb-3 mb-md-0">
+                            <h2 class="mb-1">
+                                <i class="fas fa-chart-pie me-2"></i>Daily Sales Dashboard
+                            </h2>
+                            <p class="mb-0 opacity-75">Track your daily sales performance and trends</p>
+                        </div>
+                        <div class="d-flex">
+                            <a href="{% url 'daily_sale_summary' %}" class="btn btn-light btn-sm rounded-pill">
+                                <i class="fas fa-plus-circle me-2"></i>New Summary
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="card-body p-4">
-            <div class="row">
-                <!-- Date Selection Form -->
-                <div class="col-md-5">
-                    <form method="POST" class="needs-validation" novalidate>
-                        {% csrf_token %}
-                        <div class="card shadow-sm mb-4">
-                            <div class="card-body">
-                                <h5 class="card-title mb-4">
-                                    <i class="far fa-calendar-alt me-2"></i>Select Date
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="date" class="form-label">Choose a date</label>
-                                            <input type="date" class="form-control" name="date" 
-                                                   value="{{ selected_date|date:'Y-m-d' }}" required>
+                <div class="card-body p-4">
+                    <!-- Date Selection Row -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body p-3">
+                                    <form method="POST" class="needs-validation" novalidate>
+                                        {% csrf_token %}
+                                        <div class="row g-3 align-items-center">
+                                            <div class="col-md-4">
+                                                <label for="date" class="form-label fw-bold">
+                                                    <i class="far fa-calendar-alt me-2"></i>Select Date
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="date" class="form-control rounded-end" name="date" 
+                                                           value="{{ selected_date|date:'Y-m-d' }}" required>
+                                                    <!-- <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-search"></i>
+                                                    </button> -->
+                                                </div>
+                                            </div>
+                                            {% if summary %}
+                                            <div class="col-md-8">
+                                                <div class="d-flex flex-wrap justify-content-md-end gap-2 mt-3 mt-md-0">
+                                                    <div class="bg-light rounded-pill px-3 py-1">
+                                                        <small class="text-muted">Selected:</small>
+                                                        <span class="fw-bold ms-2">{{ selected_date|date:"F j, Y" }}</span>
+                                                    </div>
+                                                    <div class="bg-light rounded-pill px-3 py-1">
+                                                        <small class="text-muted">Day:</small>
+                                                        <span class="fw-bold ms-2">{{ selected_date|date:"l" }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if message %}
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                            <div>{{ message }}</div>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Summary Content -->
+                    <div class="row">
+                        <!-- Summary Cards Column -->
+                        <div class="col-lg-5 mb-4 mb-lg-0">
+                            {% if summary %}
+                            <div class="row g-3">
+                                <!-- Main Summary Card -->
+                                <div class="col-12">
+                                    <div class="card shadow-sm border-0 h-100">
+                                        <div class="card-header bg-white border-0 pb-0">
+                                            <h5 class="fw-bold mb-0">
+                                                <i class="fas fa-file-invoice-dollar me-2 text-primary"></i>
+                                                Daily Summary
+                                            </h5>
+                                        </div>
+                                        <div class="card-body pt-2">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="card bg-light border-0 h-100">
+                                                        <div class="card-body text-center py-4">
+                                                            <div class="text-muted mb-2">
+                                                                <i class="fas fa-money-bill-wave me-2"></i>Cash in Hand
+                                                            </div>
+                                                            <h3 class="fw-bold text-primary">₹{{ summary.remaining_cash }}</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card bg-light border-0 h-100">
+                                                        <div class="card-body text-center py-4">
+                                                            <div class="text-muted mb-2">
+                                                                <i class="fas fa-piggy-bank me-2"></i>Cash in Bank
+                                                            </div>
+                                                            <h3 class="fw-bold text-info">₹{{ summary.cash_in_account }}</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card bg-light border-0 h-100">
+                                                        <div class="card-body text-center py-4">
+                                                            <div class="text-muted mb-2">
+                                                                <i class="fas fa-receipt me-2 "></i>Total Expense
+                                                            </div>
+                                                            <h3 class="fw-bold text-danger">₹{{ total_expense|floatformat:2 }}</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card bg-light border-0 h-100">
+                                                        <div class="card-body text-center py-4">
+                                                            <div class="text-muted mb-2">
+                                                                <i class="fas fa-credit-card me-2 "></i>Online Payment
+                                                            </div>
+                                                            <h3 class="fw-bold " style="color: #6f42c1;" >₹{{ online_payment_total|floatformat:2 }}</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card bg-light border-0 h-100">
+                                                        <div class="card-body text-center py-4">
+                                                            <div class="text-muted mb-2">
+                                                                <i class="fas fa-shopping-cart me-2"></i>Total Sale
+                                                            </div>
+                                                            <h3 class="fw-bold text-success">₹{{ summary.total_sale }}</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6">
+                                                    <div class="card bg-light border-0 h-100">
+                                                        <div class="card-body text-center py-4">
+                                                            <div class="text-muted mb-2">
+                                                                <i class="fas fa-chart-line me-2"></i>Daily Benefit
+                                                            </div>
+                                                            <h3 class="fw-bold text-warning">₹{{ summary.daily_benefit }}</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Monthly Benefit Card -->
+                                <div class="col-12">
+                                    <div class="card shadow-sm border-0 bg-gradient-info text-white">
+                                        <div class="card-body text-center py-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h5 class="mb-1">Monthly Benefit</h5>
+                                                    <p class="mb-0 opacity-75">Cumulative for {{ selected_date|date:"F Y" }}</p>
+                                                </div>
+                                                <h2 class="mb-0">₹{{ summary.cumulative_monthly_benefit }}</h2>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
-
-                    {% if message %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    {% endif %}
-
-                    <!-- Summary Card -->
-                    {% if summary %}
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-file-invoice me-2"></i>
-                                Summary for {{ selected_date|date:"F j, Y" }}
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group list-group-flush">
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Cash in Box:</span>
-                                    <span class="badge bg-info rounded-pill fs-6">₹{{ summary.remaining_cash }}</span>
-                                </div>
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Cash in Account:</span>
-                                    <span class="badge bg-info rounded-pill fs-6">₹{{ summary.cash_in_account }}</span>
-                                </div>
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Total Sale:</span>
-                                    <span class="badge bg-success rounded-pill fs-6">₹{{ summary.total_sale }}</span>
-                                </div>
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Daily Benefit:</span>
-                                    <span class="badge bg-warning rounded-pill fs-6">₹{{ summary.daily_benefit }}</span>
-                                </div>
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Monthly Benefit:</span>
-                                    <span class="badge bg-primary rounded-pill fs-6">₹{{ summary.cumulative_monthly_benefit }}</span>
+                            {% else %}
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-body d-flex flex-column align-items-center justify-content-center py-5">
+                                    <i class="fas fa-chart-bar fa-4x text-muted mb-4 opacity-25"></i>
+                                    <h5 class="text-muted">No summary available</h5>
+                                    <p class="text-muted small">Select a date to view daily sales summary</p>
                                 </div>
                             </div>
+                            {% endif %}
                         </div>
-                    </div>
-                    {% endif %}
-                </div>
 
-                <!-- Graph Section -->
-                <div class="col-md-7">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-chart-bar me-2"></i>
-                                Daily Benefit Trend (Last 7 Days)
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="benefitChart" height="300"></canvas>
+                        <!-- Graph Column -->
+                        <div class="col-lg-7">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-header bg-white border-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="fw-bold mb-0">
+                                            <i class="fas fa-chart-line me-2 text-primary"></i>
+                                            <span id="chart-title">Weekly Benefit Trend</span>
+                                        </h5>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                    id="chartTypeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fas fa-chart-area me-1"></i>
+                                                <span id="chart-type-label">7 Days</span>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="chartTypeDropdown">
+                                                <li>
+                                                    <a class="dropdown-item chart-type-option" href="#" data-type="7days">
+                                                        <i class="fas fa-calendar-week me-2"></i>Last 7 Days
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item chart-type-option" href="#" data-type="monthly">
+                                                        <i class="fas fa-calendar-alt me-2"></i>Monthly Cumulative
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body pt-0">
+                                    <div class="chart-container" style="position: relative; height: 300px;">
+                                        <canvas id="benefitChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -104,102 +228,227 @@
 
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // Auto-submit form on date change
+    // Auto-submit form when date changes
     const dateInput = document.querySelector("input[name='date']");
-    const form = dateInput?.closest("form");
-    if (dateInput && form) {
-        dateInput.addEventListener("change", function () {
-            form.submit();
+    if (dateInput) {
+        dateInput.addEventListener("change", function() {
+            this.closest("form").submit();
         });
     }
 
-    // Initialize chart
-    const ctx = document.getElementById('benefitChart').getContext('2d');
-
-    // Sample data - replace with actual data from your context
-    const chartData = {
+    // Chart data from Django template
+    const chartData7Days = {
         labels: [
             {% for day in last_7_days %}
                 "{{ day.date|date:'M j' }}"{% if not forloop.last %},{% endif %}
             {% endfor %}
         ],
         datasets: [{
-            label: 'Daily Benefit',
+            label: 'Daily Benefit (₹)',
             data: [
                 {% for day in last_7_days %}
                     {{ day.daily_benefit|default:0 }}{% if not forloop.last %},{% endif %}
                 {% endfor %}
             ],
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: true
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+            pointBorderColor: '#fff',
+            pointHoverRadius: 6,
+            pointHoverBorderWidth: 2
         }]
     };
 
-    const benefitChart = new Chart(ctx, {
+    const chartDataMonthly = {
+        labels: [
+            {% for month in monthly_data %}
+                "{{ month.month|date:'M Y' }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Monthly Cumulative Benefit (₹)',
+            data: [
+                {% for month in monthly_data %}
+                    {{ month.cumulative_benefit|default:0 }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+            borderColor: 'rgba(153, 102, 255, 1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+            pointBorderColor: '#fff',
+            pointHoverRadius: 6,
+            pointHoverBorderWidth: 2
+        }]
+    };
+
+    // Initialize chart with 7-day data by default
+    const ctx = document.getElementById('benefitChart').getContext('2d');
+    let benefitChart = new Chart(ctx, {
         type: 'line',
-        data: chartData,
-        options: {
+        data: chartData7Days,
+        options: getChartOptions('7 Days Trend')
+    });
+
+    // Chart type switcher
+    const chartTypeDropdown = document.getElementById('chartTypeDropdown');
+    const chartTypeLabel = document.getElementById('chart-type-label');
+    const chartTitle = document.getElementById('chart-title');
+    const chartTypeOptions = document.querySelectorAll('.chart-type-option');
+
+    chartTypeOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const type = this.getAttribute('data-type');
+            
+            // Update dropdown label
+            if (type === '7days') {
+                chartTypeLabel.textContent = '7 Days';
+                chartTitle.textContent = 'Weekly Benefit Trend';
+                benefitChart.data = chartData7Days;
+                benefitChart.options = getChartOptions('7 Days Trend');
+            } else if (type === 'monthly') {
+                chartTypeLabel.textContent = 'Monthly';
+                chartTitle.textContent = 'Monthly Cumulative Benefit';
+                benefitChart.data = chartDataMonthly;
+                benefitChart.options = getChartOptions('Monthly Cumulative');
+            }
+            
+            benefitChart.update();
+        });
+    });
+
+    // Common chart options
+    function getChartOptions(title) {
+        return {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'top',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
                 },
                 tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false,
                     callbacks: {
                         label: function(context) {
-                            return '₹' + context.raw.toLocaleString();
+                            return '₹' + context.raw.toLocaleString('en-IN');
                         }
                     }
+                },
+                datalabels: {
+                    display: false
                 }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
             },
             scales: {
                 y: {
                     beginAtZero: false,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    },
                     ticks: {
                         callback: function(value) {
-                            return '₹' + value.toLocaleString();
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
+                            return '₹' + value.toLocaleString('en-IN');
+                        },
+                        padding: 10
                     }
                 },
                 x: {
                     grid: {
-                        display: false
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        padding: 10
                     }
                 }
+            },
+            elements: {
+                line: {
+                    borderJoinStyle: 'round'
+                }
             }
-        }
-    });
+        };
+    }
 });
 </script>
 
 <style>
     .card {
-        border-radius: 0.5rem;
+        border-radius: 12px;
         overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
     }
     .card-header {
-        padding: 1rem 1.5rem;
+        border-bottom: none;
     }
-    .list-group-item {
-        padding: 1rem 0;
-        border-color: rgba(0, 0, 0, 0.05);
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+    }
+    .chart-container {
+        min-height: 300px;
     }
     .badge {
-        padding: 0.5em 0.75em;
+        font-weight: 500;
+        letter-spacing: 0.5px;
     }
-    #benefitChart {
-        width: 100% !important;
-        height: 100% !important;
+    .form-control {
+        border-radius: 8px !important;
+    }
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    .input-group-text {
+        border-radius: 8px 0 0 8px !important;
+    }
+    .dropdown-menu {
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .dropdown-item {
+        border-radius: 6px;
+        margin: 2px 6px;
+        width: auto;
+    }
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 1.25rem;
+        }
     }
 </style>
 

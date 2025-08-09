@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Shop, Category, Expense, CustomUser,ExpenseItem,DailySaleSummary
+from .models import Shop,Distributor,Expense, CustomUser,ExpenseItem,DailySaleSummary,OnlinePayment,SalaryExpense
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -20,8 +20,11 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Shop)
-admin.site.register(Category)
+# admin.site.register(Category)
 # admin.site.register(Income)
 admin.site.register(Expense)
 admin.site.register(ExpenseItem)
 admin.site.register(DailySaleSummary)
+admin.site.register(SalaryExpense)
+admin.site.register(OnlinePayment)
+admin.site.register(Distributor)

@@ -1,94 +1,113 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-white border-bottom-0 py-3">
-            <h2 class="mb-0">
-                <i class="fas fa-plus-circle text-primary me-2"></i>Add New Expense
-            </h2>
+    <div class="card shadow-lg border-0 rounded-3">
+        <!-- Card Header -->
+        <div class="card-header bg-primary text-white py-3 rounded-top-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <h2 class="mb-2 mb-md-0 fw-bold">
+                    <i class="fas fa-plus-circle me-2"></i>Add New Expense
+                </h2>
+                <span class="badge bg-white text-primary fs-6">
+                    <i class="fas fa-store me-1"></i> {{ request.user.shop.name }}
+                </span>
+            </div>
         </div>
-        
-        <div class="card-body">
+
+        <!-- Card Body -->
+        <div class="card-body px-4 py-4">
             <form method="post" id="expense-form" class="needs-validation" novalidate>
                 {% csrf_token %}
 
+                <!-- Date Input -->
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        <label for="expense-date" class="form-label">Date</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white">
+                        <label for="expense-date" class="form-label fw-semibold">Date</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-calendar-day text-primary"></i>
                             </span>
-                            <input type="date" name="date" id="expense-date" class="form-control form-control-lg" 
+                            <input type="date" name="date" id="expense-date" class="form-control border-start-0" 
                                    value="{{ today_date }}" required>
                         </div>
                     </div>
                 </div>
 
-                <div class="card mb-4 border-0 shadow-sm">
+                <!-- Payment Details Card -->
+                <div class="card mb-4 border-0 shadow-sm rounded-3">
                     <div class="card-header bg-white border-0 py-3">
-                        <h5 class="mb-0">
-                            <i class="fas fa-cart-plus text-success me-2"></i>Add Items
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="fas fa-cash-register text-success me-2"></i>Payment Details
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3" id="item-input-row">
                             <div class="col-md-5">
-                                <label for="item-category" class="form-label">Item</label>
-                                <select class="form-select form-select-lg" id="item-category" required>
-                                    <option value="" selected disabled>Select Item</option>
-                                    {% for cat in categories %}
-                                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                <label for="item-distributor" class="form-label fw-semibold">Distributor</label>
+                                <select class="form-select" id="item-distributor" required>
+                                    <option value="" selected disabled>Select Distributor</option>
+                                    {% for distributor in distributors %}
+                                        <option value="{{ distributor.id }}" data-type="{{ distributor.type }}">
+                                            {{ distributor.name }}
+                                        </option>
                                     {% endfor %}
                                 </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label for="item-qty" class="form-label">Quantity</label>
-                                <input type="number" id="item-qty" class="form-control form-control-lg" 
-                                       placeholder="0" min="1" required>
+                                <div class="invalid-feedback">Please select a distributor</div>
                             </div>
                             <div class="col-md-3">
-                                <label for="item-price" class="form-label">Price</label>
+                                <label for="item-amount" class="form-label fw-semibold">Amount</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white">₹</span>
-                                    <input type="number" id="item-price" class="form-control form-control-lg" 
+                                    <input type="number" id="item-amount" class="form-control" 
                                            placeholder="0.00" step="0.01" min="0" required>
+                                    <div class="invalid-feedback">Enter valid amount</div>
                                 </div>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-success btn-lg w-100" onclick="addItem()">
-                                    <i class="fas fa-plus me-1"></i> Add
+                                <button type="button" class="btn btn-success w-100 py-2" onclick="addItem()">
+                                    <i class="fas fa-plus me-1"></i> 
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm mb-4">
+                <!-- Expense Items Card -->
+                <div class="card border-0 shadow-sm rounded-3 mb-4">
                     <div class="card-header bg-white border-0 py-3">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list-alt text-primary me-2"></i>Expense Items
-                        </h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-semibold">
+                                <i class="fas fa-list-alt text-primary me-2"></i>Expense Items
+                            </h5>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                <span id="items-count">0</span> items
+                            </span>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0" id="items-table">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="5%">#</th>
-                                        <th>Item</th>
-                                        <th width="12%" class="text-end">Qty</th>
-                                        <th width="15%" class="text-end">Price</th>
-                                        <th width="15%" class="text-end">Amount</th>
-                                        <th width="10%" class="text-center">Action</th>
+                                        <th width="5%" class="ps-4">#</th>
+                                        <th>Distributor</th>
+                                        <th width="20%" class="text-end pe-4">Amount</th>
+                                        <th width="10%" class="text-center pe-4">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody></tbody>
+                                <tbody>
+                                    <tr id="empty-row" class="text-center text-muted py-4">
+                                        <td colspan="4">
+                                            <i class="fas fa-receipt fa-2x mb-2"></i>
+                                            <p class="mb-0">No items added yet</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
                                 <tfoot class="table-light">
                                     <tr>
-                                        <td colspan="4" class="text-end fw-bold">Total:</td>
-                                        <td class="text-end fw-bold">₹<span id="total-amount">0.00</span></td>
-                                        <td></td>
+                                        <td colspan="2" class="text-end fw-bold ps-4">Total:</td>
+                                        <td class="text-end fw-bold pe-4">₹<span id="total-amount">0.00</span></td>
+                                        <td class="pe-4"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -96,11 +115,24 @@
                     </div>
                 </div>
 
+                <!-- <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 mb-4 bg-light rounded-3">
+                    <div class="mb-2 mb-md-0">
+                        <span class="fw-semibold me-2">Total Items:</span>
+                        <span id="total-items-badge" class="badge bg-primary">0</span>
+                    </div>
+                    <div class="text-md-end">
+                        <span class="fw-semibold me-2 fs-5">Total Amount:</span>
+                        <span id="total-amount" class="fw-bold fs-5 text-success">₹0.00</span>
+                    </div>
+                </div> -->
+
                 <input type="hidden" name="items_json" id="items-json">
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="submit" class="btn btn-primary btn-lg px-4">
-                        <i class="fas fa-save me-2"></i>Save Expense
+                <!-- Form Actions -->
+                <div class="d-flex flex-column flex-md-row justify-content-end gap-3">
+                    
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="fas fa-save me-1"></i> Save Expense
                     </button>
                 </div>
             </form>
@@ -112,56 +144,78 @@
     let items = [];
 
     function addItem() {
-        const catSelect = document.getElementById('item-category');
-        const catId = catSelect.value;
-        const catName = catSelect.options[catSelect.selectedIndex].text;
-        const qty = parseInt(document.getElementById('item-qty').value);
-        const price = parseFloat(document.getElementById('item-price').value);
-
-        if (!catId || isNaN(qty) || isNaN(price)) {
-            alert("Please select an item and enter valid quantity and price.");
+        const distributorSelect = document.getElementById('item-distributor');
+        const amountInput = document.getElementById('item-amount');
+        
+        // Validate distributor selection
+        if (!distributorSelect.value) {
+            distributorSelect.classList.add('is-invalid');
+            distributorSelect.focus();
             return;
+        } else {
+            distributorSelect.classList.remove('is-invalid');
+        }
+        
+        // Validate amount
+        if (!amountInput.value || isNaN(parseFloat(amountInput.value)) || parseFloat(amountInput.value) <= 0) {
+            amountInput.classList.add('is-invalid');
+            amountInput.focus();
+            return;
+        } else {
+            amountInput.classList.remove('is-invalid');
         }
 
-        const amount = qty * price;
+        const distributorId = distributorSelect.value;
+        const distributorName = distributorSelect.options[distributorSelect.selectedIndex].text;
+        const amount = parseFloat(amountInput.value);
+        const date = document.getElementById('expense-date').value;
+        
         items.push({ 
-            catId, 
-            catName, 
-            qty, 
-            price, 
-            amount 
+            distributorId, 
+            distributorName, 
+            amount,
+            date
         });
 
         updateTable();
         clearInputs();
-        document.getElementById('item-category').focus();
+        distributorSelect.focus();
     }
 
     function updateTable() {
         const tbody = document.querySelector('#items-table tbody');
         tbody.innerHTML = "";
 
-        let total = 0;
-
-        items.forEach((item, index) => {
-            total += item.amount;
-            tbody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.catName}</td>
-                    <td class="text-end">${item.qty}</td>
-                    <td class="text-end">₹${item.price.toFixed(2)}</td>
-                    <td class="text-end">₹${item.amount.toFixed(2)}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(${index})">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+        if (items.length === 0) {
+            tbody.innerHTML = `
+                <tr id="empty-row" class="text-center text-muted py-4">
+                    <td colspan="4">
+                        <i class="fas fa-receipt fa-2x mb-2"></i>
+                        <p class="mb-0">No items added yet</p>
                     </td>
                 </tr>
             `;
-        });
+        } else {
+            let total = 0;
+            items.forEach((item, index) => {
+                total += item.amount;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-4">${index + 1}</td>
+                        <td>${item.distributorName}</td>
+                        <td class="text-end pe-4">₹${item.amount.toFixed(2)}</td>
+                        <td class="text-center pe-4">
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${index})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
-        document.getElementById('total-amount').innerText = total.toFixed(2);
+        document.getElementById('total-amount').innerText = items.reduce((sum, item) => sum + item.amount, 0).toFixed(2);
+        document.getElementById('items-count').innerText = items.length;
         document.getElementById('items-json').value = JSON.stringify(items);
     }
 
@@ -173,48 +227,47 @@
     }
 
     function clearInputs() {
-        document.getElementById('item-qty').value = '';
-        document.getElementById('item-price').value = '';
+        document.getElementById('item-amount').value = '';
+        document.getElementById('item-distributor').selectedIndex = 0;
     }
 
-    // Form validation
-    document.addEventListener('DOMContentLoaded', function() {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.prototype.slice.call(forms).forEach(function(form) {
-            form.addEventListener('submit', function(event) {
-                if (items.length === 0) {
-                    alert("Please add at least one expense item");
-                    event.preventDefault();
-                    event.stopPropagation();
-                    return false;
-                }
-                
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                
-                form.classList.add('was-validated');
-            }, false);
-        });
+    document.getElementById('expense-form').addEventListener('submit', function(event) {
+        if (items.length === 0) {
+            alert("Please add at least one expense item");
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        }
         
-        // Auto-focus category field on page load
-        document.getElementById('item-category')?.focus();
+        const dateField = document.getElementById('expense-date');
+        if (!dateField.value) {
+            dateField.classList.add('is-invalid');
+            alert("Please select a date");
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        }
+        
+        this.classList.add('was-validated');
     });
+
+    // Initialize with empty table
+    updateTable();
 </script>
 
 <style>
     .card {
-        border-radius: 0.5rem;
-        transition: all 0.3s ease;
+        border-radius: 0.75rem;
+        overflow: hidden;
     }
     
-    .card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    .card-header {
+        border-radius: 0.75rem 0.75rem 0 0 !important;
     }
     
     .table th {
         border-top: none;
+        border-bottom: 2px solid #e9ecef;
         font-weight: 600;
         text-transform: uppercase;
         font-size: 0.75rem;
@@ -224,34 +277,74 @@
     
     .table td {
         vertical-align: middle;
+        border-color: #f8f9fa;
     }
     
     .table-hover tbody tr:hover {
-        background-color: rgba(78, 115, 223, 0.05);
+        background-color: rgba(13, 110, 253, 0.05);
     }
     
-    .form-select-lg, .form-control-lg {
-        padding: 0.5rem 1rem;
+    .input-group-text {
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        border-color: rgba(13, 110, 253, 0.5);
+    }
+    
+    .form-control:focus + .input-group-text {
+        border-color: rgba(13, 110, 253, 0.5);
+    }
+    
+    .btn-outline-danger:hover {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
     }
     
     @media (max-width: 768px) {
-        .form-select-lg, .form-control-lg {
-            padding: 0.5rem 0.75rem;
-            font-size: 1rem;
+        .card-body {
+            padding: 1.25rem;
         }
         
-        .btn-lg {
+        #item-input-row .col-md-2 {
+            margin-top: 0.5rem;
+        }
+        
+        .btn {
             padding: 0.5rem 1rem;
         }
     }
     
     @media (max-width: 576px) {
-        #item-input-row .col-md-2 {
-            margin-top: 1rem;
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
         }
         
-        .card-header {
-            padding: 1rem;
+        #item-input-row .col-md-5, 
+        #item-input-row .col-md-3, 
+        #item-input-row .col-md-2 {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        #item-input-row .col-md-2 {
+            margin-top: 0;
+        }
+        
+        .d-flex.justify-content-end {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            width: 100%;
         }
     }
 </style>

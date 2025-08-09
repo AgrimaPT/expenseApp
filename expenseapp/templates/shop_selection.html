@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-store me-2"></i>Select Shop to Manage
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for shop in shops %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
+                                        <i class="fas fa-store fs-3 text-primary"></i>
+                                    </div>
+                                    <h5 class="card-title">{{ shop.name }}</h5>
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-barcode me-1"></i> {{ shop.shop_code }}
+                                    </p>
+                                    <p class="text-muted small mb-3">
+                                        <i class="fas fa-map-marker-alt me-1"></i> {{ shop.address|truncatechars:30 }}
+                                    </p>
+                                    <!-- <a href="{% url 'dashboard' %}?shop_id={{ shop.id }}" 
+                                       class="btn btn-primary stretched-link">
+                                        <i class="fas fa-tachometer-alt me-1"></i> Go to Dashboard
+                                    </a> -->
+
+                                    <a href="{% url 'dashboard' %}?shop_id={{ shop.id }}&t={% now 'U' %}" 
+   class="btn btn-primary stretched-link">
+    <i class="fas fa-tachometer-alt me-1"></i> Go to Dashboard
+</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> You don't have any shops yet.
+                                <a href="{% url 'create_shop' %}" class="alert-link">Create your first shop</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .stretched-link::after {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1;
+        content: "";
+    }
+</style>
+{% endblock %}

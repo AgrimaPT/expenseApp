@@ -2,90 +2,127 @@
 {% load custom_tags %}
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3 class="mb-0">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white py-3 rounded-top">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <h3 class="mb-2 mb-md-0 fw-bold">
                     <i class="fas fa-money-bill-wave me-2"></i>Daily Salary Payments
                 </h3>
-                <span class="badge bg-white text-primary fs-6">
-                    {{ selected_date|date:"F j, Y" }}
-                </span>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-white text-primary fs-6 me-2">
+                        <i class="fas fa-calendar me-1"></i> {{ selected_date|date:"F j, Y" }}
+                    </span>
+                    <span class="badge bg-white text-primary fs-6">
+                        <i class="fas fa-users me-1"></i> {{ employees|length }} Employees
+                    </span>
+                </div>
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body px-0 px-md-4">
             <form method="POST" class="needs-validation" novalidate>
                 {% csrf_token %}
                 
+                <!-- Date Selection -->
                 <div class="row justify-content-center mb-4">
-                    <div class="col-md-6 col-lg-4">
-                        <label for="date" class="form-label fw-bold">Select Date</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white">
+                    <div class="col-md-8 col-lg-6 col-xl-5">
+                        <label for="date" class="form-label fw-semibold">Select Date</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-calendar-day text-primary"></i>
                             </span>
-                            <input type="date" id="date" name="date" class="form-control form-control-lg" 
+                            <input type="date" id="date" name="date" class="form-control border-start-0" 
                                    value="{{ selected_date|date:'Y-m-d' }}" required>
+                            <button class="btn btn-outline-primary" type="button" id="today-btn">
+                                Today
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <input type="hidden" name="selected_date" value="{{ selected_date|date:'Y-m-d' }}">
-
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                <!-- Salary Table -->
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th width="35%">Staff Member</th>
-                                <th width="35%">Contact</th>
-                                <th width="30%" class="text-end">Salary Amount</th>
+                                <th width="35%" class="ps-4">Employee</th>
+                                <th width="25%">Position</th>
+                                <th width="25%" class="text-end pe-4">Salary Amount</th>
+                                <th width="15%" class="text-center">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for staff in staff_members %}
-                            {% with existing_salaries|get_item:staff.id as existing_salary %}
-                            <tr>
-                                <td>
+                            {% for employee in employees %}
+                            {% with existing_salaries|get_item:employee.id as existing_salary %}
+                            <tr class="{% if existing_salary %}table-success{% endif %}">
+                                <td class="ps-4">
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar avatar-sm me-3">
-                                            <span class="avatar-title bg-primary rounded-circle">
-                                                {{ staff.username|first|upper }}
+                                        <div class="avatar avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle me-3">
+                                            <span class="avatar-title fw-bold">
+                                                {{ employee.name|first|upper }}
                                             </span>
                                         </div>
                                         <div>
-                                            <h6 class="mb-0">{{ staff.username }}</h6>
-                                            <small class="text-muted">ID: {{ staff.id }}</small>
+                                            <h6 class="mb-0 fw-semibold">{{ employee.name }}</h6>
+                                            <small class="text-muted">ID: {{ employee.id }}</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="mailto:{{ staff.email }}" class="text-decoration-none">
-                                        <i class="fas fa-envelope me-2 text-muted"></i>
-                                        {{ staff.email }}
-                                    </a>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        {{ employee.position|default:"-" }}
+                                    </span>
                                 </td>
-                                <td>
+                                <td class="pe-4">
                                     <div class="input-group">
                                         <span class="input-group-text bg-white">₹</span>
-                                        <input type="number" name="salary_{{ staff.id }}" 
+                                        <input type="number" name="salary_{{ employee.id }}" 
                                                class="form-control text-end salary-input"
                                                step="0.01" min="0" required
                                                value="{{ existing_salary.amount|default_if_none:'' }}"
-                                               onchange="formatCurrency(this)">
+                                               onchange="formatCurrency(this)"
+                                               {% if existing_salary %}disabled{% endif %}>
                                     </div>
+                                </td>
+                                <td class="text-center">
+                                    {% if existing_salary %}
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        <i class="fas fa-check-circle me-1"></i> Paid
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning">
+                                        <i class="fas fa-clock me-1"></i> Pending
+                                    </span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endwith %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="py-4">
+                                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                                        <h4 class="fw-semibold">No Active Employees</h4>
+                                        <p class="text-muted mb-3">Add employees to process salary payments</p>
+                                        <a href="{% url 'employee_list' %}" class="btn btn-primary px-4">
+                                            <i class="fas fa-users me-2"></i>Manage Employees
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg px-4">
+                <!-- Action Buttons -->
+                <div class="d-flex flex-column flex-md-row justify-content-center gap-3 mt-4">
+                    <button type="submit" class="btn btn-primary px-4 py-2">
                         <i class="fas fa-paper-plane me-2"></i>Submit Salaries
                     </button>
+                    <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary px-4 py-2">
+                        <i class="fas fa-users me-2"></i>Manage Employees
+                    </a>
                 </div>
             </form>
         </div>
@@ -99,6 +136,13 @@
         const url = new URL(window.location.href);
         url.searchParams.set('date', selectedDate);
         window.location.href = url.toString();
+    });
+
+    // Today button handler
+    document.getElementById("today-btn").addEventListener("click", function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("date").value = today;
+        document.getElementById("date").dispatchEvent(new Event('change'));
     });
 
     // Format currency inputs
@@ -116,10 +160,11 @@
             }
         });
         
-        // Focus first salary input if empty
-        const firstInput = document.querySelector('.salary-input');
-        if (firstInput && !firstInput.value) {
-            firstInput.focus();
+        // Focus first empty salary input
+        const emptyInputs = Array.from(document.querySelectorAll('.salary-input'))
+            .filter(input => !input.disabled && !input.value);
+        if (emptyInputs.length > 0) {
+            emptyInputs[0].focus();
         }
     });
 
@@ -132,6 +177,13 @@
                 if (!form.checkValidity()) {
                     event.preventDefault();
                     event.stopPropagation();
+                    
+                    // Scroll to first invalid input
+                    const firstInvalid = form.querySelector(':invalid');
+                    if (firstInvalid) {
+                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstInvalid.focus();
+                    }
                 }
                 form.classList.add('was-validated');
             }, false);
@@ -140,10 +192,32 @@
 </script>
 
 <style>
-    /* Custom Styles */
     .card {
-        border-radius: 0.5rem;
+        border-radius: 0.75rem;
         overflow: hidden;
+    }
+    
+    .card-header {
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+    }
+    
+    .table th {
+        border-top: none;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        border-color: #f8f9fa;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
     }
     
     .avatar {
@@ -154,65 +228,84 @@
         height: 2.5rem;
     }
     
+    .avatar-sm {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
+    }
+    
     .avatar-title {
         display: flex;
         align-items: center;
         justify-content: center;
         width: 100%;
         height: 100%;
-        font-weight: 600;
     }
     
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
-        color: #6c757d;
+    .input-group-text {
+        transition: all 0.3s ease;
     }
     
-    .table td {
-        vertical-align: middle;
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        border-color: rgba(13, 110, 253, 0.5);
     }
     
-    .table-hover tbody tr:hover {
-        background-color: rgba(78, 115, 223, 0.05);
+    .form-control:focus + .input-group-text {
+        border-color: rgba(13, 110, 253, 0.5);
     }
     
-    .salary-input {
-        max-width: 150px;
-        margin-left: auto;
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
     }
     
     @media (max-width: 768px) {
-        .card-header h3 {
-            font-size: 1.5rem;
+        .card-body {
+            padding: 1.25rem;
+        }
+        
+        .table-responsive {
+            border: 0;
+        }
+        
+        .table thead {
+            display: none;
+        }
+        
+        .table tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
         }
         
         .table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 0.75rem;
+            border-bottom: 1px solid #f8f9fa;
         }
         
-        .salary-input {
-            max-width: 100%;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .avatar {
-            width: 2rem;
-            height: 2rem;
-            font-size: 0.8rem;
+        .table td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #6c757d;
+            margin-right: 1rem;
         }
         
-        .table td {
-            padding: 0.5rem;
+        .table td:last-child {
+            border-bottom: 0;
         }
         
-        .btn-lg {
-            padding: 0.5rem 1rem;
-            font-size: 1rem;
+        .d-flex.flex-md-row {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .btn {
+            width: 100%;
         }
     }
 </style>

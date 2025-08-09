@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Add New Distributor</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.name.label_tag }}
+            {{ form.name }}
+        </div>
+        <div class="form-group">
+            {{ form.type.label_tag }}
+            {{ form.type }}
+        </div>
+        <div class="form-group">
+            {{ form.contact_person.label_tag }}
+            {{ form.contact_person }}
+        </div>
+        <div class="form-group">
+            {{ form.phone.label_tag }}
+            {{ form.phone }}
+        </div>
+        <button type="submit" class="btn btn-primary">Save Distributor</button>
+    </form>
+</div>
+{% endblock %}

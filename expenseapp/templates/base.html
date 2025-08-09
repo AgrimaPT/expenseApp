@@ -38,19 +38,20 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-home me-1"></i> Dashboard</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'view_daily_summary' %}"><i class="fas fa-money-bill-wave me-1"></i>Reports</a>
-                </li>
+                {% if user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'shop_list' %}"><i class="fas fa-store me-1"></i> My Shops</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'view_daily_summary' %}"><i class="fas fa-money-bill-wave me-1"></i>Reports</a>
+                    </li>
+                    
+                {% endif %}
+                
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'expense_list' %}"><i class="fas fa-receipt me-1"></i> Expenses</a>
                 </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'manage_staff' %}"><i class="fas fa-users-cog me-1"></i> Staff Management</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'category_list' %}"><i class="fas fa-th-list me-1"></i> Categories</a>
-                </li>
+                
                 {% else %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt me-1"></i> Login</a>

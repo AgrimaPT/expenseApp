@@ -2,247 +2,305 @@
 {% load static %}
 {% block content %}
 
-<div class="container-fluid py-4">
-  <div class="card shadow-sm">
-    <div class="card-header bg-white border-bottom-0 py-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <h2 class="mb-0">
-          <i class="fas fa-chart-line text-primary me-2"></i>Sale Summary
+<div class="container-fluid px-0 px-md-3 py-4">
+  <div class="card border-0 shadow-sm overflow-hidden">
+    <!-- Card Header -->
+    <div class="card-header bg-primary text-white py-3">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+    <div class="mb-2 mb-md-0">
+        <h2 class="h4 mb-1">
+            <i class="fas fa-chart-pie me-2"></i>Sales Summary Dashboard
         </h2>
+        <p class="small mb-0 opacity-75">Track your daily sales performance and financial metrics</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
         {% if calculated %}
-        <span class="badge bg-primary rounded-pill fs-6">
-          {{ selected_date|date:"F j, Y" }}
-        </span>
+        <div class="bg-white bg-opacity-10 px-3 py-1 rounded-pill">
+            <i class="fas fa-calendar-day me-2"></i>
+            <span class="fw-medium">{{ selected_date|date:"F j, Y" }}</span>
+        </div>
         {% endif %}
-      </div>
+        <a href="{% url 'view_daily_summary' %}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-list me-1"></i> View Summaries
+        </a>
+    </div>
+</div>
     </div>
 
-    <div class="card-body">
-      <form method="POST" class="needs-validation" novalidate>
+    <!-- Card Body -->
+    <div class="card-body p-3 p-md-4">
+      <!-- Input Form -->
+      <form method="POST" class="needs-validation mb-4" novalidate>
         {% csrf_token %}
         
         <div class="row g-3">
+          <!-- Date Input -->
           <div class="col-md-4">
-            <label for="date" class="form-label">Select Date</label>
+            <label for="date" class="form-label small text-muted fw-bold">SELECT DATE</label>
             <div class="input-group">
-              <span class="input-group-text bg-white">
-                <i class="fas fa-calendar-day text-primary"></i>
+              <span class="input-group-text bg-light border-end-0">
+                <i class="fas fa-calendar text-primary"></i>
               </span>
-              <input type="date" name="date" id="date" class="form-control form-control-lg"
+              <input type="date" name="date" id="date" 
+                     class="form-control border-start-0 shadow-none" 
                      value="{{ selected_date|date:'Y-m-d' }}" required>
             </div>
           </div>
           
+          <!-- Cash in Box -->
           <div class="col-md-4">
-            <label for="cash_in_box" class="form-label">Cash in Box</label>
+            <label for="cash_in_box" class="form-label small text-muted fw-bold">CASH IN HAND (₹)</label>
             <div class="input-group">
-              <span class="input-group-text bg-white">₹</span>
+              <span class="input-group-text bg-light border-end-0">₹</span>
               <input type="number" step="0.01" name="cash_in_box" id="cash_in_box" 
-                     class="form-control form-control-lg" value="{{ cash_in_box }}" required>
+                     class="form-control border-start-0 shadow-none" 
+                     value="{{ cash_in_box }}" required>
             </div>
           </div>
           
+          <!-- Cash in Account -->
           <div class="col-md-4">
-            <label for="cash_in_account" class="form-label">Cash in Account</label>
+            <label for="cash_in_account" class="form-label small text-muted fw-bold">CASH IN BANK (₹)</label>
             <div class="input-group">
-              <span class="input-group-text bg-white">₹</span>
+              <span class="input-group-text bg-light border-end-0">₹</span>
               <input type="number" step="0.01" name="cash_in_account" id="cash_in_account" 
-                     class="form-control form-control-lg" value="{{ cash_in_account }}" required>
+                     class="form-control border-start-0 shadow-none" 
+                     value="{{ cash_in_account }}" required>
             </div>
           </div>
         </div>
         
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-          <button type="submit" class="btn btn-primary btn-lg px-4">
+        <!-- Submit Button -->
+        <div class="d-flex justify-content-end mt-4">
+          <button type="submit" class="btn btn-primary px-4">
             <i class="fas fa-calculator me-2"></i>Calculate
           </button>
         </div>
       </form>
 
       {% if calculated %}
-      <div class="mt-5">
-        <h4 class="mb-4">
-          <i class="fas fa-file-invoice-dollar text-primary me-2"></i>
-          Summary Details
-        </h4>
+      <!-- Summary Dashboard -->
+      <div class="mt-4 pt-3 border-top">
+        <h5 class="mb-3 text-primary">
+          <i class="fas fa-file-invoice-dollar me-2"></i>
+          Summary for {{ selected_date|date:"F j, Y" }}
+        </h5>
         
-        <div class="row g-4">
+        <div class="row g-3">
           <!-- Total Expense Card -->
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-start border-3 border-danger h-100">
+          <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 bg-light">
               <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between">
                   <div>
-                    <h6 class="text-muted mb-2">Total Expense (Cash)</h6>
-                    <h3 class="mb-0">₹{{ total_expense }}</h3>
+                    <h6 class="text-muted mb-2 small fw-bold">TOTAL EXPENSE</h6>
+                    <h3 class="mb-0 text-danger">₹{{ total_expense }}</h3>
                   </div>
-                  <div class="bg-danger bg-opacity-10 p-3 rounded">
-                    <i class="fas fa-money-bill-wave text-danger fa-2x"></i>
+                  <div class="bg-danger bg-opacity-10 p-2 rounded">
+                    <i class="fas fa-money-bill-wave text-danger"></i>
                   </div>
                 </div>
-                <hr>
-                <ul class="list-unstyled mb-0">
-                  <li class="mb-2">
+                <div class="mt-3 pt-2 border-top">
+                  <div class="d-flex justify-content-between small mb-1">
                     <span class="text-muted">Expense Items:</span>
-                    <span class="float-end fw-bold">₹{{ expense_items_total }}</span>
-                  </li>
-                  <li>
+                    <span class="fw-bold">₹{{ expense_items_total }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between small">
                     <span class="text-muted">Salary Expenses:</span>
-                    <span class="float-end fw-bold">₹{{ salary_total }}</span>
-                  </li>
-                </ul>
+                    <span class="fw-bold">₹{{ salary_total }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
           
           <!-- Online Payments Card -->
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-start border-3 border-info h-100">
+          <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 bg-light">
               <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between">
                   <div>
-                    <h6 class="text-muted mb-2">Online Payments</h6>
-                    <h3 class="mb-0">₹{{ online_payment_total }}</h3>
+                    <h6 class="text-muted mb-2 small fw-bold">ONLINE PAYMENTS</h6>
+                    <h3 class="mb-0 text-info">₹{{ online_payment_total }}</h3>
                   </div>
-                  <div class="bg-info bg-opacity-10 p-3 rounded">
-                    <i class="fas fa-credit-card text-info fa-2x"></i>
+                  <div class="bg-info bg-opacity-10 p-2 rounded">
+                    <i class="fas fa-credit-card text-info"></i>
                   </div>
                 </div>
-                <hr>
-                <div class="text-muted small">
-                  Digital transactions for {{ selected_date|date:"F j" }}
+                <!-- <div class="mt-3 pt-3">
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-info" style="width: {{ online_payment_percentage|default:0 }}%"></div>
+                  </div>
+                  <div class="small text-muted mt-1">
+                    {{ online_payment_percentage|default:0 }}% of total sales
+                  </div>
+                </div> -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- Total Sale Card -->
+          <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 bg-light">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h6 class="text-muted mb-2 small fw-bold">TOTAL SALE</h6>
+                    <h3 class="mb-0 text-success">₹{{ total_sale }}</h3>
+                  </div>
+                  <div class="bg-success bg-opacity-10 p-2 rounded">
+                    <i class="fas fa-cash-register text-success"></i>
+                  </div>
+                </div>
+                <div class="mt-3 pt-2 border-top">
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-muted">Cash in Hand:</span>
+                    <span class="fw-bold">₹{{ cash_in_box }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between small">
+                    <span class="text-muted">Cash in Bank:</span>
+                    <span class="fw-bold">₹{{ cash_in_account }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between small">
+                    <span class="text-muted">Total expense:</span>
+                    <span class="fw-bold">₹{{ total_expense  }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           
-          <!-- Sales Summary Card -->
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-start border-3 border-success h-100">
+          <!-- Daily Benefit Card -->
+          <!-- Daily Benefit Card -->
+          <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 bg-light">
               <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between">
                   <div>
-                    <h6 class="text-muted mb-2">Total Sale</h6>
-                    <h3 class="mb-0">₹{{ total_sale }}</h3>
+                    <h6 class="text-muted mb-2 small fw-bold">DAILY PROFIT</h6>
+                    <h3 class="mb-0 text-warning">₹{{ daily_benefit }}</h3>
                   </div>
-                  <div class="bg-success bg-opacity-10 p-3 rounded">
-                    <i class="fas fa-cash-register text-success fa-2x"></i>
+                  <div class="bg-warning bg-opacity-10 p-2 rounded">
+                    <i class="fas fa-sun text-warning"></i>
                   </div>
                 </div>
-                <hr>
-                <ul class="list-unstyled mb-0">
-                  <li class="mb-2">
-                    <span class="text-muted">Cash in Box:</span>
-                    <span class="float-end fw-bold">₹{{ cash_in_box }}</span>
-                  </li>
-                  <li>
-                    <span class="text-muted">Cash in Account:</span>
-                    <span class="float-end fw-bold">₹{{ cash_in_account }}</span>
-                  </li>
-                </ul>
+                <div class="mt-3 pt-2 border-top">
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-muted">Total Sale:</span>
+                    <span class="fw-bold">₹{{ total_sale }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-muted">Total Expense:</span>
+                    <span class="fw-bold text-danger">- ₹{{ total_expense }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between small">
+                    <span class="text-muted">Online Payments:</span>
+                    <span class="fw-bold text-danger">- ₹{{ online_payment_total }}</span>
+                  </div>
+                </div>
+                <!-- <div class="mt-2 pt-2 border-top small">
+                  <div class="d-flex align-items-center">
+                    {% if daily_benefit_trend == 'up' %}
+                    <i class="fas fa-arrow-up text-success me-2"></i>
+                    <span class="text-success">Increased from yesterday</span>
+                    {% elif daily_benefit_trend == 'down' %}
+                    <i class="fas fa-arrow-down text-danger me-2"></i>
+                    <span class="text-danger">Decreased from yesterday</span>
+                    {% else %}
+                    <i class="fas fa-equals text-muted me-2"></i>
+                    <span class="text-muted">Same as yesterday</span>
+                    {% endif %}
+                  </div>
+                </div> -->
               </div>
             </div>
           </div>
-          
-          <!-- Benefits Cards -->
-          <div class="col-md-6">
-            <div class="card border-start border-3 border-warning h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="text-muted mb-2">Daily Benefit</h6>
-                    <h3 class="mb-0">₹{{ daily_benefit }}</h3>
+        </div>
+        
+        <!-- Monthly Summary Row -->
+        <div class="row mt-3">
+          <div class="col-12">
+            <div class="card border-0 bg-primary bg-opacity-10">
+              <div class="card-body py-3">
+                <div class="row align-items-center">
+                  <div class="col-md-8">
+                    <h6 class="text-primary mb-1 small fw-bold">MONTHLY CUMULATIVE PROFIT</h6>
+                    <h3 class="text-primary mb-0">₹{{ monthly_benefit }}</h3>
                   </div>
-                  <div class="bg-warning bg-opacity-10 p-3 rounded">
-                    <i class="fas fa-sun text-warning fa-2x"></i>
+                  <div class="col-md-4 text-md-end">
+                    <span class="badge bg-primary rounded-pill">
+                      {{ selected_date|date:"F Y" }}
+                    </span>
                   </div>
-                </div>
-                <hr>
-                <div class="text-muted small">
-                  Net profit for {{ selected_date|date:"F j, Y" }}
                 </div>
               </div>
             </div>
           </div>
-          
-          <!-- <div class="col-md-6">
-            <div class="card border-start border-3 border-primary h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="text-muted mb-2">Monthly Benefit</h6>
-                    <h3 class="mb-0">₹{{ monthly_benefit }}</h3>
-                  </div>
-                  <div class="bg-primary bg-opacity-10 p-3 rounded">
-                    <i class="fas fa-calendar-alt text-primary fa-2x"></i>
-                  </div>
-                </div>
-                <hr>
-                <div class="text-muted small">
-                  Cumulative profit till {{ selected_date|date:"F j" }}
-                </div>
-              </div>
-            </div>
-          </div> -->
         </div>
       </div>
       {% endif %}
     </div>
   </div>
+
+  
 </div>
 
 <style>
   /* Custom Styles */
-  .border-start {
-    border-left-width: 3px !important;
-  }
-  
   .card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
-  }
-  
-  .form-control-lg {
-    padding: 0.5rem 1rem;
-    font-size: 1.1rem;
-  }
-  
-  .input-group-text {
+    border-radius: 0.5rem;
     transition: all 0.2s ease;
   }
   
-  .input-group:focus-within .input-group-text {
-    color: #4e73df;
-    background-color: rgba(78, 115, 223, 0.1);
+  .card:hover {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
   }
   
+  .card-header {
+    border-bottom: none;
+  }
+  
+  .form-control {
+    border-left: none !important;
+  }
+  
+  .input-group-text {
+    border-right: none !important;
+    background-color: #f8f9fa !important;
+  }
+  
+  .progress {
+    border-radius: 0.25rem;
+    background-color: #e9ecef;
+  }
+  
+  /* Responsive adjustments */
   @media (max-width: 768px) {
-    .form-control-lg {
-      padding: 0.5rem 0.75rem;
-      font-size: 1rem;
+    .card-body {
+      padding: 1rem;
     }
     
-    .card-body {
-      padding: 1.25rem;
+    .h4 {
+      font-size: 1.25rem;
+    }
+    
+    h3 {
+      font-size: 1.5rem;
     }
   }
   
   @media (max-width: 576px) {
+    .container-fluid {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+    
     .card-header {
-      padding: 1rem;
+      padding: 0.75rem;
     }
     
-    .card-body {
-      padding: 1rem;
-    }
-    
-    .btn-lg {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
+    .btn {
+      width: 100%;
     }
   }
 </style>

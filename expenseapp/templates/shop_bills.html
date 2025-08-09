@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-credit-card me-2"></i>
+            Payment Management - {{ shop.name }}
+        </h2>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Unpaid Bills Section -->
+    <div class="card shadow-sm mb-4 unpaid-bills-card">
+        <div class="card-header bg-danger bg-opacity-10">
+            <h5 class="mb-0">
+                <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                Unpaid Bills
+                <span class="badge bg-danger ms-2">{{ unpaid_bills.count }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if unpaid_bills %}
+            <div class="table-responsive">
+                <table class="table table-hover unpaid-bills-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Distributor</th>
+                            <th>Amount</th>
+                            <th>Due Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bill in unpaid_bills %}
+                        <tr class="unpaid-bill-row" data-bill-id="{{ bill.id }}">
+                            <td>{{ bill.invoice_number|default:"-" }}</td>
+                            <td>{{ bill.distributor.name }}</td>
+                            <td>₹{{ bill.amount }}</td>
+                            <td>{{ bill.date|date:"M d, Y" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-success mark-paid-btn" 
+                                        data-bill-id="{{ bill.id }}">
+                                    <i class="fas fa-check me-1"></i>Mark Paid
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                All bills are paid up to date!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Paid Bills Section -->
+    <div class="card shadow-sm paid-bills-card">
+        <div class="card-header bg-success bg-opacity-10">
+            <h5 class="mb-0">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                Recently Paid Bills
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover paid-bills-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Distributor</th>
+                            <th>Amount</th>
+                            <th>Paid On</th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bill in paid_bills %}
+                        <tr>
+                            <td>{{ bill.invoice_number|default:"-" }}</td>
+                            <td>{{ bill.distributor.name }}</td>
+                            <td>₹{{ bill.amount }}</td>
+                            <td>{{ bill.paid_at|date:"M d, Y" }}</td>
+                            
+                        </tr>
+                        {% empty %}
+                        <tr class="no-paid-bills-message">
+                            <td colspan="5" class="text-center text-muted py-4">
+                                No paid bills found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container (for notifications) -->
+<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 11"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Handle mark as paid button click
+    $('.mark-paid-btn').click(function() {
+        const billId = $(this).data('bill-id');
+        const row = $(this).closest('tr');
+        
+        $.ajax({
+            url: `/mark-bill-paid/${billId}/`,
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            success: function(response) {
+                if(response.success) {
+                    // Move row to paid table
+                    row.fadeOut(300, function() {
+                        const paidTable = $('.paid-bills-table tbody');
+                        const newRow = `
+                            <tr>
+                                <td>${row.find('td:eq(0)').text()}</td>
+                                <td>${row.find('td:eq(1)').text()}</td>
+                                <td>${row.find('td:eq(2)').text()}</td>
+                                <td>${new Date().toLocaleDateString()}</td>
+                                <td>{{ request.user.get_full_name }}</td>
+                            </tr>
+                        `;
+                        
+                        // Prepend to paid table
+                        if($('.no-paid-bills-message').length) {
+                            $('.no-paid-bills-message').remove();
+                        }
+                        paidTable.prepend(newRow);
+                        
+                        // Update unpaid count
+                        const unpaidCount = $('.unpaid-bill-row').length - 1;
+                        $('.badge.bg-danger').text(unpaidCount);
+                        
+                        if(unpaidCount === 0) {
+                            $('.unpaid-bills-table tbody').html(`
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        All bills are paid up to date!
+                                    </td>
+                                </tr>
+                            `);
+                        }
+                    });
+                    
+                    showToast('Bill marked as paid successfully!', 'success');
+                }
+            },
+            error: function(xhr) {
+                showToast('Error marking bill as paid: ' + xhr.responseJSON.error, 'danger');
+            }
+        });
+    });
+    
+    function showToast(message, type) {
+        const toast = $(`
+            <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `);
+        
+        $('#toast-container').append(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+});
+</script>
+<style>
+    /* Payment Management Styles */
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .mark-paid-btn {
+        transition: all 0.2s ease;
+    }
+
+    .mark-paid-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .toast {
+        margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}

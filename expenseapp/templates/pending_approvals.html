@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Pending Approvals</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Shop</th>
+            <th>Date Joined</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in pending_users %}
+        <tr>
+            <td>{{ user.email }}</td>
+            <td>{{ user.get_role_display }}</td>
+            <td>{{ user.shop.name }}</td>
+            <td>{{ user.date_joined|date:"Y-m-d" }}</td>
+            <td>
+        <form method="post" action="{% url 'approve_user' user.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="shop_id" value="{{ request.GET.shop_id }}">
+            <button type="submit" class="btn btn-success">Approve</button>
+        </form>
+    </td>
+    <td>
+        <form method="post" action="{% url 'reject_user' user.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="shop_id" value="{{ request.GET.shop_id }}">
+            <button type="submit" class="btn btn-danger">Reject</button>
+        </form>
+    </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No pending approvals</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Approve Confirmation Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Approval</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to approve <span id="approveUserEmail"></span>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="approveForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Confirm Approval</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Confirmation Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Rejection</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reject <span id="rejectUserEmail"></span>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="rejectForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Approve Modal setup
+    const approveModal = document.getElementById('approveModal');
+    approveModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const userId = button.getAttribute('data-user-id');
+        const userEmail = button.getAttribute('data-user-email');
+        
+        document.getElementById('approveUserEmail').textContent = userEmail;
+        document.getElementById('approveForm').action = `/approve-user/${userId}/`;
+    });
+    
+    // Reject Modal setup
+    const rejectModal = document.getElementById('rejectModal');
+    rejectModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const userId = button.getAttribute('data-user-id');
+        const userEmail = button.getAttribute('data-user-email');
+        
+        document.getElementById('rejectUserEmail').textContent = userEmail;
+        document.getElementById('rejectForm').action = `/reject-user/${userId}/`;
+    });
+});
+</script>
+{% endblock %}

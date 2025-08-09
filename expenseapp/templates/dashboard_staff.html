@@ -1,14 +1,187 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center">
-    <h2 class="mb-3">Welcome, {{ request.user.username }}</h2>
-    <p><strong>Shop:</strong> {{ request.user.shop.name }}</p>
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-4">
-            <a href="#" class="btn btn-outline-primary w-100 mb-2">Add Income</a>
-            <a href="#" class="btn btn-outline-secondary w-100 mb-2">Add Expense</a>
-            <a href="#" class="btn btn-outline-success w-100">My Entries</a>
+<div class="container-fluid py-4">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
+                        <div class="mb-3 mb-md-0 text-center text-md-start">
+                            <h2 class="mb-2 fw-bold text-primary">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </h2>
+                            <span class="badge bg-primary bg-opacity-10 text-primary fs-6 py-2 px-3 rounded-pill">
+                                <i class="fas fa-store me-1"></i> {{ request.user.shop.name }}
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="me-3 d-none d-md-block text-end">
+                                <p class="small mb-0 text-muted">Logged in as</p>
+                                <h6 class="mb-0 fw-bold">{{ request.user.username }}</h6>
+                            </div>
+                            <div class="avatar avatar-lg bg-primary bg-opacity-10 rounded-circle">
+                                <span class="avatar-title text-primary fw-bold fs-4">
+                                    {{ request.user.username|first|upper }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Expenses Header -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                        <h5 class="mb-2 mb-md-0 fw-bold text-muted">
+                            <i class="fas fa-history me-2 text-primary"></i>Recent Expenses
+                        </h5>
+                        <a href="{% url 'expense_list' %}" class="btn btn-outline-primary btn-sm px-3 rounded-pill">
+                            View All <i class="fas fa-external-link-alt ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-group">
+                <!-- Add Expense Card -->
+                <div class="card border-0 shadow-sm mb-3 mb-md-0 me-md-3 rounded-3 hover-effect">
+                    <div class="card-body text-center p-3 p-md-4">
+                        <div class="icon-shape icon-lg bg-primary bg-opacity-10 text-primary rounded-3 mb-3 mx-auto">
+                            <i class="fas fa-plus fs-4"></i>
+                        </div>
+                        <h5 class="h6 mb-3 fw-semibold">Add Expense</h5>
+                        <a href="{% url 'add_expense' %}" class="btn btn-sm btn-primary px-3 rounded-pill stretched-link">
+                            Create New <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Record Salary Card -->
+                <div class="card border-0 shadow-sm mb-3 mb-md-0 me-md-3 rounded-3 hover-effect">
+                    <div class="card-body text-center p-3 p-md-4">
+                        <div class="icon-shape icon-lg bg-success bg-opacity-10 text-success rounded-3 mb-3 mx-auto">
+                            <i class="fas fa-money-bill-wave fs-4"></i>
+                        </div>
+                        <h5 class="h6 mb-3 fw-semibold">Record Salary</h5>
+                        <a href="{% url 'mark_salary' %}" class="btn btn-sm btn-success px-3 rounded-pill stretched-link">
+                            Enter Salaries <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Online Payment Card -->
+                <div class="card border-0 shadow-sm mb-3 mb-md-0 rounded-3 hover-effect">
+                    <div class="card-body text-center p-3 p-md-4">
+                        <div class="icon-shape icon-lg bg-info bg-opacity-10 text-info rounded-3 mb-3 mx-auto">
+                            <i class="fas fa-credit-card fs-4"></i>
+                        </div>
+                        <h5 class="h6 mb-3 fw-semibold">Online Payment</h5>
+                        <a href="{% url 'add_online_payment' %}" class="btn btn-sm btn-info px-3 rounded-pill stretched-link">
+                            Add Payment <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Custom Styles */
+    .avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    .avatar-lg {
+        width: 4rem;
+        height: 4rem;
+    }
+    
+    .avatar-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .icon-shape {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.5rem;
+        height: 3.5rem;
+    }
+    
+    .icon-lg {
+        width: 4rem;
+        height: 4rem;
+    }
+    
+    .hover-effect {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    .hover-effect:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .rounded-3 {
+        border-radius: 1rem !important;
+    }
+    
+    .rounded-pill {
+        border-radius: 50rem !important;
+    }
+    
+    .card {
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    @media (max-width: 768px) {
+        .card-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-group .card {
+            margin-bottom: 1rem;
+            margin-right: 0 !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .card-header .d-flex {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .card-header .d-flex > div:last-child {
+            margin-top: 1rem;
+            width: 100%;
+        }
+        
+        .btn-sm {
+            width: 100%;
+        }
+    }
+</style>
 {% endblock %}

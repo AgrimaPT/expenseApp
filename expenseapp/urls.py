@@ -1,9 +1,11 @@
 from django.urls import path
 from . import views
+from .views import ShopBillsView,MarkBillPaidView
 
 urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('staff-signup/', views.staff_signup_view, name='staff_signup'),
+    path('supervisor-signup/', views.supervisor_signup_view, name='supervisor_signup'),
     path('', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
@@ -21,4 +23,32 @@ urlpatterns = [
     path('view-summary/', views.view_daily_summary, name='view_daily_summary'),
 
 
+
+
+    path('my-shops/', views.shop_list, name='shop_list'),
+    path('shops/edit/<int:shop_id>/', views.edit_shop, name='edit_shop'),
+    path('employees/', views.employee_list, name='employee_list'),
+    path('employees/add/', views.add_employee, name='add_employee'),
+
+    path('distributors/', views.distributor_list, name='distributor_list'),
+    path('distributors/add/', views.add_distributor, name='add_distributor'),
+    path('distributors/<int:pk>/edit/', views.edit_distributor, name='edit_distributor'),
+    path('distributors/<int:pk>/delete/', views.delete_distributor, name='delete_distributor'),
+
+
+   # urls.py
+    path('approvals/', views.pending_approvals, name='pending_approvals'),
+    path('approvals/approve/<int:user_id>/', views.approve_user, name='approve_user'),
+    path('approvals/reject/<int:user_id>/', views.reject_user, name='reject_user'),
+
+
+    path('expenses/verify-items/', views.verify_expense_items, name='verify_expense_items'),
+    path('expenses/verify-salaries/', views.verify_salary_items, name='verify_salary_items'),
+    path('expenses/verify-online/', views.verify_online_items, name='verify_online_items'),
+
+    path('shop/<int:shop_id>/bills/', views.shop_bills_view, name='shop_bills'),
+    path('payments/<int:payment_id>/mark-paid/', views.mark_payment_paid, name='mark_payment_paid'),
+
+    path('shop-bills/', ShopBillsView.as_view(), name='shop_bills'),
+    path('mark-bill-paid/<int:bill_id>/', MarkBillPaidView.as_view(), name='mark_bill_paid'),
 ]

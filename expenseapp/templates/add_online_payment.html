@@ -1,110 +1,140 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-3 mt-md-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h2 class="mb-0">
-                <i class="fas fa-credit-card me-2 text-primary"></i>
-                Add Online Payment
-            </h2>
+<div class="container py-4">
+    <div class="card shadow-lg border-0 rounded-3">
+        <!-- Card Header -->
+        <div class="card-header bg-primary text-white py-3 rounded-top-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <h2 class="mb-0 fw-bold">
+                    <i class="fas fa-credit-card me-2"></i>Add Online Payment
+                </h2>
+                <span class="badge bg-white text-primary fs-6">
+                    <i class="fas fa-store me-1"></i> {{ request.user.shop.name }}
+                </span>
+            </div>
         </div>
-        
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data" id="payment-form" class="needs-validation" novalidate>
+
+        <!-- Card Body -->
+        <div class="card-body px-4 py-4">
+            <form method="post" id="payment-form" class="needs-validation" novalidate>
                 {% csrf_token %}
 
+                <!-- Date Input -->
                 <div class="row mb-4">
-                    <div class="col-md-4 mb-3 mb-md-0">
-                        <label for="date" class="form-label">Date</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                            <input type="date" name="date" class="form-control" value="{{ today_date }}" required>
+                    <div class="col-md-6 col-lg-4">
+                        <label for="date" class="form-label fw-semibold">Payment Date</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-calendar-alt text-primary"></i>
+                            </span>
+                            <input type="date" name="date" class="form-control border-start-0" 
+                                   value="{{ today_date }}" required>
                         </div>
                     </div>
                 </div>
 
-                <div class="border rounded p-3 mb-4 bg-light">
-                    <h5 class="mb-3">
-                        <i class="fas fa-plus-circle me-2 text-success"></i>
-                        Add Payment Item
-                    </h5>
-                    
-                    <div class="row g-2">
-                        <div class="col-12 col-md-3">
-                            <select id="item-category" class="form-select" required>
-                                <option value="" selected disabled>Select Category</option>
-                                {% for cat in categories %}
-                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <div class="invalid-feedback">Please select a category</div>
-                        </div>
-                        <div class="col-6 col-md-2">
-                            <input type="number" id="item-qty" class="form-control" placeholder="Qty" min="1" required>
-                            <div class="invalid-feedback">Enter valid quantity</div>
-                        </div>
-                        <div class="col-6 col-md-2">
-                            <input type="number" id="item-price" class="form-control" placeholder="Price" step="0.01" min="0" required>
-                            <div class="invalid-feedback">Enter valid price</div>
-                        </div>
-                        <div class="col-12 col-md-3">
-                            <input type="text" id="item-bill-number" class="form-control" placeholder="Bill Number">
-                        </div>
-                        <div class="col-12 col-md-2">
-                            <label for="item-bill-image" class="d-block d-md-none form-label">Bill Image</label>
-                            <input type="file" id="item-bill-image" class="form-control" accept="image/*">
-                        </div>
+                <!-- Add Payment Item Section -->
+                <div class="card border-0 shadow-sm mb-4 rounded-3">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="fas fa-plus-circle text-success me-2"></i>Add Payment Item
+                        </h5>
                     </div>
-                    
-                    <div class="d-flex justify-content-end mt-3">
-                        <button type="button" class="btn btn-success" onclick="addPaymentItem()">
-                            <i class="fas fa-plus me-1"></i> Add Item
-                        </button>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label for="item-distributor" class="form-label fw-semibold">Distributor</label>
+                                <select id="item-distributor" class="form-select" required>
+                                    <option value="" selected disabled>Select Distributor</option>
+                                    {% for distributor in distributors %}
+                                        <option value="{{ distributor.id }}" data-type="{{ distributor.type }}">
+                                            {{ distributor.name }} 
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a distributor</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="item-amount" class="form-label fw-semibold">Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white">₹</span>
+                                    <input type="number" id="item-amount" class="form-control" 
+                                           placeholder="0.00" step="0.01" min="0" required>
+                                </div>
+                                <div class="invalid-feedback">Enter valid amount</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="item-invoice-number" class="form-label fw-semibold">Invoice #</label>
+                                <input type="text" id="item-invoice-number" class="form-control" 
+                                       placeholder="Invoice Number">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-success w-100 py-2" onclick="addPaymentItem()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="table-responsive mb-4">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th width="5%">#</th>
-                                <th>Category</th>
-                                <th width="8%">Qty</th>
-                                <th width="10%">Price</th>
-                                <th width="15%">Bill#</th>
-                                <th width="15%">Image</th>
-                                <th width="12%">Amount</th>
-                                <th width="8%">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="payment-items">
-                            <tr id="empty-row" class="text-center text-muted">
-                                <td colspan="8">No items added yet</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Payment Items Table -->
+                <div class="card border-0 shadow-sm mb-4 rounded-3">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-semibold">
+                                <i class="fas fa-list-alt text-primary me-2"></i>Payment Items
+                            </h5>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                <span id="total-items">0</span> items
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="5%" class="ps-4">#</th>
+                                        <th>Distributor</th>
+                                        <th width="15%" class="text-end">Amount</th>
+                                        <th width="20%">Invoice #</th>
+                                        <th width="8%" class="text-center pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="payment-items">
+                                    <tr id="empty-row" class="text-center text-muted py-4">
+                                        <td colspan="5">
+                                            <i class="fas fa-receipt fa-2x mb-2"></i>
+                                            <p class="mb-0">No items added yet</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
-                <input type="hidden" name="items_json" id="items-json">
-                <div id="file-inputs"></div>
-
-                <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded">
-                    <div>
-                        <span class="fw-bold">Total Items: </span>
-                        <span id="total-items" class="badge bg-primary">0</span>
+                <!-- Summary Section -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 mb-4 bg-light rounded-3">
+                    <div class="mb-2 mb-md-0">
+                        <span class="fw-semibold me-2">Total Items:</span>
+                        <span id="total-items-badge" class="badge bg-primary">0</span>
                     </div>
-                    <div class="text-end">
-                        <span class="fw-bold fs-5">Total Amount: </span>
+                    <div class="text-md-end">
+                        <span class="fw-semibold me-2 fs-5">Total Amount:</span>
                         <span id="total-amount" class="fw-bold fs-5 text-success">₹0.00</span>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="reset" class="btn btn-outline-secondary">
-                        <i class="fas fa-times me-1"></i> Reset
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="submit-btn" disabled>
-                        <i class="fas fa-save me-1"></i> Save Payment
+                <input type="hidden" name="items_json" id="items-json">
+
+                <!-- Form Actions -->
+                <div class="d-flex flex-column flex-md-row justify-content-end gap-3">
+                    <!-- <button type="reset" class="btn btn-outline-secondary px-4 py-2 order-1 order-md-2">
+                        <i class="fas fa-redo me-1"></i> Reset Form
+                    </button> -->
+                    <button type="submit" class="btn btn-primary px-4 py-2 order-2 order-md-1" id="submit-btn" disabled>
+                        <i class="fas fa-save me-1"></i> Save Expense
                     </button>
                 </div>
             </form>
@@ -122,87 +152,23 @@
             return;
         }
 
-        const catSelect = document.getElementById('item-category');
-        const catId = catSelect.value;
-        const catName = catSelect.options[catSelect.selectedIndex].text;
-        const qty = parseFloat(document.getElementById('item-qty').value);
-        const price = parseFloat(document.getElementById('item-price').value);
-        const billNumber = document.getElementById('item-bill-number').value;
-        const billImage = document.getElementById('item-bill-image').files[0];
+        const distributorSelect = document.getElementById('item-distributor');
+        const distributorId = distributorSelect.value;
+        const distributorName = distributorSelect.options[distributorSelect.selectedIndex].text;
+        const amount = parseFloat(document.getElementById('item-amount').value);
+        const invoiceNumber = document.getElementById('item-invoice-number').value;
+        const date = document.querySelector('input[name="date"]').value;
 
-        const index = items.length;
         items.push({ 
-            catId, 
-            catName, 
-            qty, 
-            price, 
-            amount: qty * price, 
-            billNumber 
+            distributorId, 
+            distributorName, 
+            amount,
+            invoiceNumber,
+            date: date || '{{ today_date }}'
         });
 
-        // Remove empty row if it exists
-        const emptyRow = document.getElementById('empty-row');
-        if (emptyRow) emptyRow.remove();
-
-        const tbody = document.getElementById('payment-items');
-        const row = tbody.insertRow();
-        row.className = 'align-middle';
-
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${catName}</td>
-            <td>${qty}</td>
-            <td>₹${price.toFixed(2)}</td>
-            <td>${billNumber || '-'}</td>
-            <td>${billImage ? '<i class="fas fa-file-image text-success"></i> ' + billImage.name : '-'}</td>
-            <td class="fw-bold">₹${(qty * price).toFixed(2)}</td>
-            <td>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(${index})">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        `;
-
-        // Handle file upload
-        if (billImage) {
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.name = `billImage_${index}`;
-            fileInput.style.display = 'none';
-            
-            // Create a new DataTransfer to set files
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(billImage);
-            fileInput.files = dataTransfer.files;
-            
-            document.getElementById('file-inputs').appendChild(fileInput);
-        }
-
-        updateJSON();
-        resetInputs();
-        document.getElementById('submit-btn').disabled = items.length === 0;
-    }
-
-    function updateJSON() {
-        document.getElementById('items-json').value = JSON.stringify(items);
-        const total = items.reduce((sum, item) => sum + item.amount, 0);
-        document.getElementById('total-amount').innerText = `₹${total.toFixed(2)}`;
-        document.getElementById('total-items').innerText = items.length;
-    }
-
-    function resetInputs() {
-        document.getElementById('item-category').value = '';
-        document.getElementById('item-qty').value = '';
-        document.getElementById('item-price').value = '';
-        document.getElementById('item-bill-number').value = '';
-        document.getElementById('item-bill-image').value = '';
-        document.getElementById('payment-form').classList.remove('was-validated');
-    }
-
-    function removeItem(index) {
-        items.splice(index, 1);
         renderItems();
-        document.getElementById('submit-btn').disabled = items.length === 0;
+        resetInputs();
     }
 
     function renderItems() {
@@ -211,10 +177,15 @@
         
         if (items.length === 0) {
             tbody.innerHTML = `
-                <tr id="empty-row" class="text-center text-muted">
-                    <td colspan="8">No items added yet</td>
+                <tr id="empty-row" class="text-center text-muted py-4">
+                    <td colspan="5">
+                        <i class="fas fa-receipt fa-2x mb-2"></i>
+                        <p class="mb-0">No items added yet</p>
+                    </td>
                 </tr>
             `;
+            document.getElementById('submit-btn').disabled = true;
+            updateSummary();
             return;
         }
 
@@ -222,58 +193,172 @@
             const row = tbody.insertRow();
             row.className = 'align-middle';
             row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.catName}</td>
-                <td>${item.qty}</td>
-                <td>₹${item.price.toFixed(2)}</td>
-                <td>${item.billNumber || '-'}</td>
-                <td>
-                    ${document.querySelector(`input[name="billImage_${index}"]`) ? 
-                      '<i class="fas fa-file-image text-success"></i> ' + 
-                      document.querySelector(`input[name="billImage_${index}"]`).files[0].name : 
-                      '-'}
-                </td>
-                <td class="fw-bold">₹${item.amount.toFixed(2)}</td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(${index})">
+                <td class="ps-4">${index + 1}</td>
+                <td>${item.distributorName}</td>
+                <td class="text-end fw-bold">₹${item.amount.toFixed(2)}</td>
+                <td>${item.invoiceNumber || '-'}</td>
+                <td class="text-center pe-4">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${index})">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
             `;
         });
-        
-        updateJSON();
+
+        document.getElementById('submit-btn').disabled = false;
+        updateSummary();
     }
+
+    function removeItem(index) {
+        if (confirm('Are you sure you want to remove this item?')) {
+            items.splice(index, 1);
+            renderItems();
+        }
+    }
+
+    function resetInputs() {
+        document.getElementById('item-distributor').value = '';
+        document.getElementById('item-amount').value = '';
+        document.getElementById('item-invoice-number').value = '';
+        document.getElementById('payment-form').classList.remove('was-validated');
+    }
+
+    function updateSummary() {
+        document.getElementById('items-json').value = JSON.stringify(items);
+        const total = items.reduce((sum, item) => sum + item.amount, 0);
+        document.getElementById('total-amount').innerText = `₹${total.toFixed(2)}`;
+        document.getElementById('total-items').innerText = items.length;
+        document.getElementById('total-items-badge').innerText = items.length;
+    }
+
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', function() {
+        // Focus first input on load
+        document.getElementById('item-distributor').focus();
+        
+        // Form validation
+        document.getElementById('payment-form').addEventListener('submit', function(event) {
+            if (items.length === 0) {
+                event.preventDefault();
+                alert('Please add at least one payment item');
+                return false;
+            }
+            
+            if (!this.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            this.classList.add('was-validated');
+        });
+    });
 </script>
 
 <style>
     .card {
-        border-radius: 0.5rem;
+        border: none;
+        overflow: hidden;
     }
     
     .card-header {
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid rgba(0,0,0,.125);
+        border-bottom: 1px solid rgba(0,0,0,.05);
     }
     
     .table th {
-        white-space: nowrap;
+        border-top: none;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        border-color: #f8f9fa;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .input-group-text {
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        border-color: rgba(13, 110, 253, 0.5);
+    }
+    
+    .form-control:focus + .input-group-text {
+        border-color: rgba(13, 110, 253, 0.5);
+    }
+    
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
     }
     
     @media (max-width: 768px) {
-        .card-header {
-            text-align: center;
+        .card-body {
+            padding: 1.25rem;
+        }
+        
+        #item-input-row .col-md-1 {
+            margin-top: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .table-responsive {
+            border: 0;
+        }
+        
+        .table thead {
+            display: none;
+        }
+        
+        .table tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+        }
+        
+        .table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .table td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #6c757d;
+            margin-right: 1rem;
+        }
+        
+        .table td:last-child {
+            border-bottom: 0;
+        }
+        
+        .d-flex.flex-md-row {
+            flex-direction: column;
+            gap: 0.75rem;
         }
         
         .btn {
             width: 100%;
-            margin-bottom: 0.5rem;
-        }
-        
-        .d-flex.justify-content-end {
-            flex-direction: column;
         }
     }
-
 </style>
 {% endblock %}
