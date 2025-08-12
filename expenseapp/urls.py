@@ -37,10 +37,8 @@ urlpatterns = [
 
 
    # urls.py
-    path('approvals/', views.pending_approvals, name='pending_approvals'),
-    path('approvals/approve/<int:user_id>/', views.approve_user, name='approve_user'),
-    path('approvals/reject/<int:user_id>/', views.reject_user, name='reject_user'),
-
+    # path('approvals/', views.pending_approvals, name='pending_approvals'),
+    
 
     path('expenses/verify-items/', views.verify_expense_items, name='verify_expense_items'),
     path('expenses/verify-salaries/', views.verify_salary_items, name='verify_salary_items'),
@@ -51,4 +49,19 @@ urlpatterns = [
 
     path('shop-bills/', ShopBillsView.as_view(), name='shop_bills'),
     path('mark-bill-paid/<int:bill_id>/', MarkBillPaidView.as_view(), name='mark_bill_paid'),
+
+
+
+    path('request-shop-access/', views.request_shop_access, name='request_shop_access'),
+    path('my-shop-access/', views.my_shop_access, name='my_shop_access'),
+    path('manage-supervisor-access/', views.manage_supervisor_access, name='manage_supervisor_access'),
+    path('approve-supervisor-access/<int:access_id>/', views.approve_supervisor_access, name='approve_supervisor_access'),
+    path('reject-supervisor-access/<int:access_id>/', views.reject_supervisor_access, name='reject_supervisor_access'),
+
+    path('approvals/', views.combined_approvals, name='combined_approvals'),
+    path('approvals/approve/<int:user_id>/', views.approve_user, name='approve_user'),
+    path('approvals/reject/<int:user_id>/', views.reject_user, name='reject_user'),
+
+    path('approvals/revoke/<int:user_id>/', views.revoke_supervisor_access, name='revoke_supervisor_access'),
+
 ]

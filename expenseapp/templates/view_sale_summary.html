@@ -9,7 +9,7 @@
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
                         <div class="mb-3 mb-md-0">
                             <h2 class="mb-1">
-                                <i class="fas fa-chart-pie me-2"></i>Daily Sales Dashboard
+                                <i class="fas fa-chart-pie me-2"></i>Daily Sales Dashboard - {{ shop.name }}
                             </h2>
                             <p class="mb-0 opacity-75">Track your daily sales performance and trends</p>
                         </div>
@@ -77,7 +77,7 @@
                     <div class="row">
                         <!-- Summary Cards Column -->
                         <div class="col-lg-5 mb-4 mb-lg-0">
-                            {% if summary %}
+                            {% if not message and summary %}
                             <div class="row g-3">
                                 <!-- Main Summary Card -->
                                 <div class="col-12">

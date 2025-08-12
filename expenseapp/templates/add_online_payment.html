@@ -44,7 +44,7 @@
                         <div class="row g-3">
                             <div class="col-md-5">
                                 <label for="item-distributor" class="form-label fw-semibold">Distributor</label>
-                                <select id="item-distributor" class="form-select" required>
+                                <select id="item-distributor" class="form-select" >
                                     <option value="" selected disabled>Select Distributor</option>
                                     {% for distributor in distributors %}
                                         <option value="{{ distributor.id }}" data-type="{{ distributor.type }}">
@@ -59,7 +59,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text bg-white">₹</span>
                                     <input type="number" id="item-amount" class="form-control" 
-                                           placeholder="0.00" step="0.01" min="0" required>
+                                           placeholder="0.00" step="0.01" min="0" >
                                 </div>
                                 <div class="invalid-feedback">Enter valid amount</div>
                             </div>

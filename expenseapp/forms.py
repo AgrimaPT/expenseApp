@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import CustomUser,Shop,Distributor,Expense,Employee
+from .models import CustomUser,Shop,Distributor,Expense,Employee,SupervisorShopAccess
 
 class SignupForm(UserCreationForm):
     class Meta:
@@ -41,6 +41,62 @@ class StaffSignupForm(forms.ModelForm):
         return user
     
 # forms.py
+# class SupervisorSignupForm(forms.ModelForm):
+#     password1 = forms.CharField(
+#         label="Password",
+#         widget=forms.PasswordInput,
+#         min_length=8,
+#         help_text="Password must be at least 8 characters long"
+#     )
+#     password2 = forms.CharField(
+#         label="Confirm Password",
+#         widget=forms.PasswordInput,
+#         help_text="Enter the same password as above for verification"
+#     )
+#     shop_code = forms.CharField(
+#         max_length=10,
+#         help_text="Enter the shop code provided by the admin"
+#     )
+
+#     class Meta:
+#         model = CustomUser
+#         fields = ['email', 'username', 'shop_code']
+
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         password1 = cleaned_data.get("password1")
+#         password2 = cleaned_data.get("password2")
+
+#         if password1 and password2 and password1 != password2:
+#             raise forms.ValidationError("Passwords don't match")
+        
+#         return cleaned_data
+
+#     def clean_shop_code(self):
+#         shop_code = self.cleaned_data['shop_code'].strip()
+#         try:
+#             shop = Shop.objects.get(shop_code=shop_code)
+#             return shop_code
+#         except Shop.DoesNotExist:
+#             raise forms.ValidationError("Invalid shop code. Please contact the shop admin.")
+
+#     def save(self, commit=True):
+#         user = super().save(commit=False)
+#         user.set_password(self.cleaned_data["password1"])
+#         user.role = 'supervisor'
+#         user.is_active = False  # Needs admin approval
+#         user.approval_status = 'pending'
+        
+#         # Assign the shop
+#         shop_code = self.cleaned_data['shop_code']
+#         user.shop = Shop.objects.get(shop_code=shop_code)
+        
+#         if commit:
+#             user.save()
+#         return user
+
+
+# forms.py
 class SupervisorSignupForm(forms.ModelForm):
     password1 = forms.CharField(
         label="Password",
@@ -53,14 +109,10 @@ class SupervisorSignupForm(forms.ModelForm):
         widget=forms.PasswordInput,
         help_text="Enter the same password as above for verification"
     )
-    shop_code = forms.CharField(
-        max_length=10,
-        help_text="Enter the shop code provided by the admin"
-    )
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'username', 'shop_code']
+        fields = ['email', 'username']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -72,28 +124,47 @@ class SupervisorSignupForm(forms.ModelForm):
         
         return cleaned_data
 
-    def clean_shop_code(self):
-        shop_code = self.cleaned_data['shop_code'].strip()
-        try:
-            shop = Shop.objects.get(shop_code=shop_code)
-            return shop_code
-        except Shop.DoesNotExist:
-            raise forms.ValidationError("Invalid shop code. Please contact the shop admin.")
-
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
         user.role = 'supervisor'
-        user.is_active = False  # Needs admin approval
-        user.approval_status = 'pending'
-        
-        # Assign the shop
-        shop_code = self.cleaned_data['shop_code']
-        user.shop = Shop.objects.get(shop_code=shop_code)
+        user.is_active = True  # Needs admin approval
+        user.approval_status = 'approved'
         
         if commit:
             user.save()
         return user
+    
+
+
+# forms.py
+class ShopAccessRequestForm(forms.ModelForm):
+    shop_code = forms.CharField(
+        max_length=10,
+        help_text="Enter the shop code you want to access"
+    )
+
+    class Meta:
+        model = SupervisorShopAccess
+        fields = ['shop_code']
+
+    def clean_shop_code(self):
+        shop_code = self.cleaned_data['shop_code'].strip()
+        try:
+            return Shop.objects.get(shop_code=shop_code)
+        except Shop.DoesNotExist:
+            raise forms.ValidationError("Invalid shop code. Please check and try again.")
+
+    # def save(self, supervisor, commit=True):
+    #     access = super().save(commit=False)
+    #     access.supervisor = supervisor
+    #     access.shop = self.cleaned_data['shop_code']
+        
+    #     if commit:
+    #         access.save()
+    #     return access
+
+
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(label="Email")  # since login is by email
 

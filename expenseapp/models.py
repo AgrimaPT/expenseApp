@@ -76,6 +76,33 @@ CustomUser.add_to_class('shop', models.ForeignKey(
 ))
 
 
+# models.py
+class SupervisorShopAccess(models.Model):
+    supervisor = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'supervisor'},
+        related_name='supervisor_accesses'
+    )
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE,related_name='supervisor_accesses')
+    is_approved = models.BooleanField(default=False)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_accesses'
+    )
+
+    class Meta:
+        unique_together = ['supervisor', 'shop']
+        verbose_name_plural = 'Supervisor Shop Accesses'
+
+    def __str__(self):
+        return f"{self.supervisor} -> {self.shop} ({'Approved' if self.is_approved else 'Pending'})"
+
 # class Category(models.Model):
 #     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
 #     name = models.CharField(max_length=100)

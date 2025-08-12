@@ -43,8 +43,15 @@
                         <a class="nav-link" href="{% url 'shop_list' %}"><i class="fas fa-store me-1"></i> My Shops</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'combined_approvals' %}"><i class="fas fa-money-bill-wave me-1"></i>Staff requests</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'view_daily_summary' %}"><i class="fas fa-money-bill-wave me-1"></i>Reports</a>
                     </li>
+                    
+                    <!-- <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage_supervisor_access' %}"><i class="fas fa-money-bill-wave me-1"></i>Reports</a>
+                    </li> -->
                     
                 {% endif %}
                 

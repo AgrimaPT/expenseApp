@@ -13,33 +13,35 @@
                 </span>
                 {% if is_supervisor %}
                 <span class="badge bg-warning bg-opacity-10 text-warning">
-                    <i class="fas fa-user-shield me-1"></i> Supervisor View
+                    <i class="fas fa-user-shield me-1"></i> Supervisor 
                 </span>
                 {% elif is_admin %}
                 <span class="badge bg-danger bg-opacity-10 text-danger">
-                    <i class="fas fa-user-cog me-1"></i> Admin View
+                    <i class="fas fa-user-cog me-1"></i> Admin 
                 </span>
                 {% else %}
                 <span class="badge bg-info bg-opacity-10 text-info">
-                    <i class="fas fa-user me-1"></i> Staff View
+                    <i class="fas fa-user me-1"></i> Staff 
                 </span>
                 {% endif %}
             </div>
         </div>
-        <div class="btn-group shadow-sm">
-            <a href="{% url 'add_expense' %}" class="btn btn-primary px-3 px-md-4 py-2">
-                <i class="fas fa-plus-circle me-1"></i> 
-                <span class="d-none d-md-inline">Add Expense</span>
-            </a>
-            <a href="{% url 'mark_salary' %}" class="btn btn-success px-3 px-md-4 py-2">
-                <i class="fas fa-money-bill-wave me-1"></i> 
-                <span class="d-none d-md-inline">Salaries</span>
-            </a>
-            <a href="{% url 'add_online_payment' %}" class="btn btn-info px-3 px-md-4 py-2">
-                <i class="fas fa-globe me-1"></i> 
-                <span class="d-none d-md-inline">Online</span>
-            </a>
-        </div>
+        {% if not is_admin %}
+<div class="btn-group shadow-sm">
+    <a href="{% url 'add_expense' %}" class="btn btn-primary px-3 px-md-4 py-2">
+        <i class="fas fa-plus-circle me-1"></i> 
+        <span class="d-none d-md-inline">Add Expense</span>
+    </a>
+    <a href="{% url 'mark_salary' %}" class="btn btn-success px-3 px-md-4 py-2">
+        <i class="fas fa-money-bill-wave me-1"></i> 
+        <span class="d-none d-md-inline">Salaries</span>
+    </a>
+    <a href="{% url 'add_online_payment' %}" class="btn btn-info px-3 px-md-4 py-2">
+        <i class="fas fa-globe me-1"></i> 
+        <span class="d-none d-md-inline">Online</span>
+    </a>
+</div>
+{% endif %}
     </div>
 
     <!-- Date Filter -->
@@ -88,7 +90,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h6 class="text-muted mb-2">Distributor Expenses</h6>
+                            <h6 class="text-muted mb-2">Local Expenses</h6>
                             <h3 class="mb-1 fw-bold">₹{{ verified_items_total|floatformat:2 }}</h3>
                             {% if is_supervisor %}
                             <span class="badge bg-warning bg-opacity-10 text-warning">
@@ -176,7 +178,7 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab">
             <i class="fas fa-truck"></i>
-            <span class="d-none d-md-inline ms-2">Distributors</span>
+            <span class="d-none d-md-inline ms-2">Local</span>
             <span class="badge bg-primary ms-1 ms-md-2">{{ item_expenses.count }}</span>
             {% if is_supervisor and pending_items_count > 0 %}
             <span class="badge bg-warning ms-1">{{ pending_items_count }}</span>
@@ -395,16 +397,16 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="selectAllSalariesFooter">
                                 <label class="form-check-label small" for="selectAllSalariesFooter">
-                                    Select all visible salaries
+                                    
                                 </label>
                             </div>
                             <div class="btn-group">
                                 <button type="submit" name="action" value="verify" class="btn btn-success">
                                     <i class="fas fa-check-circle me-1"></i> Verify
                                 </button>
-                                <button type="submit" name="action" value="unverify" class="btn btn-warning">
+                                <!-- <button type="submit" name="action" value="unverify" class="btn btn-warning">
                                     <i class="fas fa-undo me-1"></i> Unverify
-                                </button>
+                                </button> -->
                             </div>
                         </div>
                     </form>
@@ -493,16 +495,16 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="selectAllOnlineFooter">
                                 <label class="form-check-label small" for="selectAllOnlineFooter">
-                                    Select all visible payments
+                                    
                                 </label>
                             </div>
                             <div class="btn-group">
                                 <button type="submit" name="action" value="verify" class="btn btn-success">
                                     <i class="fas fa-check-circle me-1"></i> Verify
                                 </button>
-                                <button type="submit" name="action" value="unverify" class="btn btn-warning">
+                                <!-- <button type="submit" name="action" value="unverify" class="btn btn-warning">
                                     <i class="fas fa-undo me-1"></i> Unverify
-                                </button>
+                                </button> -->
                             </div>
                         </div>
                     </form>
