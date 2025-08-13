@@ -23,6 +23,7 @@ from django.utils import timezone
 from django.db.models import Q
 from django.urls import reverse
 from django.contrib import messages
+from django.db import IntegrityError
 
 
 def signup_view(request):
@@ -129,14 +130,22 @@ def create_shop(request):
     if request.method == 'POST':
         form = ShopForm(request.POST)
         if form.is_valid():
-            shop = form.save(commit=False)
-            shop.admin = request.user  # Assign the current admin as the shop admin
-            shop.save()
-            return redirect('shop_list')
+            try:
+                shop = form.save(commit=False)
+                shop.admin = request.user
+                shop.save()
+                messages.success(request, f"Shop '{shop.name}' created successfully with code: {shop.shop_code}")
+                return redirect('shop_list')
+            except IntegrityError as e:
+                if 'shop_code' in str(e):
+                    messages.error(request, "Shop creation failed due to a duplicate code. Please try again.")
+                    # Regenerate the form with the same data but new code
+                    return render(request, 'create_shop.html', {'form': form})
+                raise e
     else:
         form = ShopForm()
+    
     return render(request, 'create_shop.html', {'form': form})
-
 @login_required
 def edit_shop(request, shop_id):
     if request.user.role != 'admin':
