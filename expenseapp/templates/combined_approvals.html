@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-lg-12">
             <!-- User Approvals Section -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-0">
@@ -27,7 +27,11 @@
                                     {% for user in pending_users %}
                                     <tr>
                                         <td>{{ user.email }}</td>
-                                        <td>{{ user.get_role_display }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if user.role == 'staff' %}info{% elif user.role == 'supervisor' %}primary{% else %}success{% endif %}">
+                                                {{ user.get_role_display }}
+                                            </span>
+                                        </td>
                                         <td>{{ user.shop.name }}</td>
                                         <td>{{ user.date_joined|date:"M d, Y" }}</td>
                                         <td>
@@ -73,7 +77,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    {% if pending_access_requests %}
+                    {% if pending_supervisor_requests %}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
@@ -85,12 +89,12 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for request in pending_access_requests %}
+                                    {% for request in pending_supervisor_requests %}
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar avatar-sm bg-light rounded-circle me-2">
-                                                    <i class="fas fa-user text-primary"></i>
+                                                    <i class="fas fa-user-shield text-primary"></i>
                                                 </div>
                                                 <div>
                                                     <div>{{ request.supervisor.username }}</div>
@@ -134,7 +138,7 @@
                     {% else %}
                         <div class="text-center py-3">
                             <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
-                            <h5 class="mb-3">No Pending Access Requests</h5>
+                            <h5 class="mb-3">No Pending Supervisor Requests</h5>
                             <p class="text-muted">
                                 There are currently no pending supervisor access requests.
                             </p>
@@ -143,106 +147,250 @@
                 </div>
             </div>
 
-            <!-- Approved Users Section -->
-            <!-- In your approved users section -->
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white border-0">
-        <h4 class="mb-0">
-            <i class="fas fa-user-check me-2 text-success"></i> Approved Users
-        </h4>
-    </div>
-    <div class="card-body">
-        <!-- Approved Staff -->
-        <h5 class="mb-3">Staff Members</h5>
-        {% if approved_staff %}
-            <div class="table-responsive mb-4">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>User</th>
-                            <th>Shop</th>
-                            <th>Email</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in approved_staff %}
-                        <tr>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.shop.name }}</td>
-                            <td>{{ user.email }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="alert alert-info">No approved staff members</div>
-        {% endif %}
-
-        <!-- Approved Supervisors -->
-        <h5 class="mb-3">Supervisors</h5>
-        {% if supervisors_with_shops %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Supervisor</th>
-                            <th>Approved Shops</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for supervisor in supervisors_with_shops %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar avatar-sm bg-light rounded-circle me-2">
-                                        <i class="fas fa-user text-primary"></i>
-                                    </div>
-                                    <div>
-                                        <div>{{ supervisor.supervisor.username }}</div>
-                                        <small class="text-muted">{{ supervisor.supervisor.email }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <ul class="list-unstyled mb-0">
-                                    {% for shop in supervisor.shops %}
-                                    <li>
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="avatar avatar-sm bg-light rounded-circle me-2">
-                                                <i class="fas fa-store text-info"></i>
+            <!-- Partner Access Requests Section -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-tie me-2 text-success"></i> Partner Access Requests
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if pending_partner_requests %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Partner</th>
+                                        <th>Shop</th>
+                                        <th>Requested On</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in pending_partner_requests %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                                                    <i class="fas fa-user-tie text-success"></i>
+                                                </div>
+                                                <div>
+                                                    <div>{{ request.partner.username }}</div>
+                                                    <small class="text-muted">{{ request.partner.email }}</small>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div>{{ shop.name }}</div>
-                                                <small class="text-muted">{{ shop.shop_code }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                                                    <i class="fas fa-store text-info"></i>
+                                                </div>
+                                                <div>
+                                                    <div>{{ request.shop.name }}</div>
+                                                    <small class="text-muted">{{ request.shop.shop_code }}</small>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </li>
+                                        </td>
+                                        <td>{{ request.requested_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <form method="post" class="d-inline" 
+                                                  action="{% url 'approve_partner_access' request.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success me-2">
+                                                    <i class="fas fa-check me-1"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form method="post" class="d-inline" 
+                                                  action="{% url 'reject_partner_access' request.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times me-1"></i> Reject
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
                                     {% endfor %}
-                                </ul>
-                            </td>
-                            <td>
-                                {% for shop in supervisor.shops %}
-                                <form method="post" class="d-inline" 
-                                      action="{% url 'revoke_supervisor_access' supervisor.supervisor.id %}?shop_id={{ shop.id }}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger mb-2">
-                                        <i class="fas fa-user-slash me-1"></i> Revoke {{ shop.name }}
-                                    </button>
-                                </form>
-                                {% endfor %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                            <h5 class="mb-3">No Pending Partner Requests</h5>
+                            <p class="text-muted">
+                                There are currently no pending partner access requests.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <div class="alert alert-info">No approved supervisors</div>
-        {% endif %}
-    </div>
-</div>
+
+            <!-- Approved Users Section -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-check me-2 text-success"></i> Approved Users
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Approved Staff -->
+                    <h5 class="mb-3">Staff Members</h5>
+                    {% if approved_staff %}
+                        <div class="table-responsive mb-4">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Shop</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in approved_staff %}
+                                    <tr>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.shop.name }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ user.get_role_display }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-4">No approved staff members</div>
+                    {% endif %}
+
+                    <!-- Approved Supervisors -->
+                    <h5 class="mb-3">Supervisors</h5>
+                    {% if supervisors_with_shops %}
+                        <div class="table-responsive mb-4">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Supervisor</th>
+                                        <th>Approved Shops</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for supervisor in supervisors_with_shops %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                                                    <i class="fas fa-user-shield text-primary"></i>
+                                                </div>
+                                                <div>
+                                                    <div>{{ supervisor.supervisor.username }}</div>
+                                                    <small class="text-muted">{{ supervisor.supervisor.email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <ul class="list-unstyled mb-0">
+                                                {% for shop in supervisor.shops %}
+                                                <li>
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                                                            <i class="fas fa-store text-info"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div>{{ shop.name }}</div>
+                                                            <small class="text-muted">{{ shop.shop_code }}</small>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            {% for shop in supervisor.shops %}
+                                            <form method="post" class="d-inline" 
+                                                  action="{% url 'revoke_supervisor_access' supervisor.supervisor.id %}?shop_id={{ shop.id }}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger mb-2">
+                                                    <i class="fas fa-user-slash me-1"></i> Revoke {{ shop.name }}
+                                                </button>
+                                            </form>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-4">No approved supervisors</div>
+                    {% endif %}
+
+                    <!-- Approved Partners -->
+                    <h5 class="mb-3">Partners</h5>
+                    {% if partners_with_shops %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Partner</th>
+                                        <th>Approved Shops</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for partner in partners_with_shops %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                                                    <i class="fas fa-user-tie text-success"></i>
+                                                </div>
+                                                <div>
+                                                    <div>{{ partner.partner.username }}</div>
+                                                    <small class="text-muted">{{ partner.partner.email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <ul class="list-unstyled mb-0">
+                                                {% for shop in partner.shops %}
+                                                <li>
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                                                            <i class="fas fa-store text-info"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div>{{ shop.name }}</div>
+                                                            <small class="text-muted">{{ shop.shop_code }}</small>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            {% for shop in partner.shops %}
+                                            <form method="post" class="d-inline" 
+                                                  action="{% url 'revoke_partner_access' partner.partner.id %}?shop_id={{ shop.id }}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger mb-2">
+                                                    <i class="fas fa-user-slash me-1"></i> Revoke {{ shop.name }}
+                                                </button>
+                                            </form>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No approved partners</div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -272,6 +420,9 @@
         padding: 0.35em 0.65em;
         font-size: 0.75em;
         font-weight: 500;
+    }
+    .list-unstyled li {
+        margin-bottom: 0.5rem;
     }
 </style>
 {% endblock %}

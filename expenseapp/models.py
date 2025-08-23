@@ -27,6 +27,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('admin', 'Admin'),
         ('supervisor', 'Supervisor'),
         ('staff', 'Staff'),
+        ('partner', 'Partner'),
     )
 
     APPROVAL_STATUS_CHOICES = (
@@ -102,6 +103,38 @@ class SupervisorShopAccess(models.Model):
 
     def __str__(self):
         return f"{self.supervisor} -> {self.shop} ({'Approved' if self.is_approved else 'Pending'})"
+
+
+# models.py
+
+
+# Create PartnerShopAccess model (similar to SupervisorShopAccess)
+class PartnerShopAccess(models.Model):
+    partner = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'partner'},
+        related_name='partner_accesses'
+    )
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='partner_accesses')
+    is_approved = models.BooleanField(default=False)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_partner_accesses'
+    )
+
+    class Meta:
+        unique_together = ['partner', 'shop']
+        verbose_name_plural = 'Partner Shop Accesses'
+
+    def __str__(self):
+        return f"{self.partner} -> {self.shop} ({'Approved' if self.is_approved else 'Pending'})"
+
 
 # class Category(models.Model):
 #     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)

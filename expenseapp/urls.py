@@ -50,7 +50,8 @@ urlpatterns = [
     path('shop-bills/', ShopBillsView.as_view(), name='shop_bills'),
     path('mark-bill-paid/<int:bill_id>/', MarkBillPaidView.as_view(), name='mark_bill_paid'),
 
-
+    path('mark_payment_paid/<int:payment_id>/', views.mark_payment_paid, name='mark_payment_paid'),
+    # path('shop_bills/<int:shop_id>/', views.shop_bills_view, name='shop_bills'),
 
     path('request-shop-access/', views.request_shop_access, name='request_shop_access'),
     path('my-shop-access/', views.my_shop_access, name='my_shop_access'),
@@ -63,5 +64,14 @@ urlpatterns = [
     path('approvals/reject/<int:user_id>/', views.reject_user, name='reject_user'),
 
     path('approvals/revoke/<int:user_id>/', views.revoke_supervisor_access, name='revoke_supervisor_access'),
+
+
+    path('partner/signup/', views.partner_signup_view, name='partner_signup'),
+    path('partner/request-access/', views.request_partner_shop_access, name='request_partner_shop_access'),
+    path('partner/my-access/', views.my_partner_shop_access, name='my_partner_shop_access'),
+    path('manage-partner-access/', views.manage_partner_access, name='manage_partner_access'),
+    path('approve-partner-access/<int:access_id>/', views.approve_partner_access, name='approve_partner_access'),
+    path('reject-partner-access/<int:access_id>/', views.reject_partner_access, name='reject_partner_access'),
+    path('revoke-partner-access/<int:user_id>/', views.revoke_partner_access, name='revoke_partner_access'),
 
 ]

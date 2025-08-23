@@ -112,6 +112,56 @@ class ShopAccessRequestForm(forms.ModelForm):
     #     return access
 
 
+# forms.py
+# forms.py
+class PartnerSignupForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
+    
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'username']
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        return email
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_confirm = cleaned_data.get("password_confirm")
+        
+        if password and password_confirm and password != password_confirm:
+            raise forms.ValidationError("Passwords don't match")
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password"])
+        user.role = 'partner'
+        user.is_active = True
+        user.approval_status = 'approved'
+        
+        if commit:
+            user.save()
+        return user
+
+class PartnerShopAccessRequestForm(forms.Form):
+    shop_code = forms.CharField(max_length=10, required=True)
+    
+    def clean_shop_code(self):
+        shop_code = self.cleaned_data.get('shop_code')
+        try:
+            shop = Shop.objects.get(shop_code=shop_code)
+        except Shop.DoesNotExist:
+            raise forms.ValidationError("Invalid shop code")
+        return shop
+
+
+
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(label="Email")  # since login is by email
 

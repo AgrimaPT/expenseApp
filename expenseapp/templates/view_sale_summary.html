@@ -14,12 +14,17 @@
                             <p class="mb-0 opacity-75">Track your daily sales performance and trends</p>
                         </div>
                         <div class="d-flex">
+                            {% if is_admin %}
                             <a href="{% url 'daily_sale_summary' %}" class="btn btn-light btn-sm rounded-pill">
                                 <i class="fas fa-plus-circle me-2"></i>New Summary
                             </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
+
+
+                
 
                 <div class="card-body p-4">
                     <!-- Date Selection Row -->
@@ -115,6 +120,7 @@
                                                         <div class="card-body text-center py-4">
                                                             <div class="text-muted mb-2">
                                                                 <i class="fas fa-receipt me-2 "></i>Total Expense
+                                                                <!-- <p>(local+salary)</p> -->
                                                             </div>
                                                             <h3 class="fw-bold text-danger">₹{{ total_expense|floatformat:2 }}</h3>
                                                         </div>
@@ -135,8 +141,10 @@
                                                         <div class="card-body text-center py-4">
                                                             <div class="text-muted mb-2">
                                                                 <i class="fas fa-shopping-cart me-2"></i>Total Sale
+                                                                
                                                             </div>
                                                             <h3 class="fw-bold text-success">₹{{ summary.total_sale }}</h3>
+                                                            <!-- <p>(cash in hand+cash in bank+total expense)</p> -->
                                                         </div>
                                                     </div>
                                                 </div>

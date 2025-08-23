@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from .forms import DistributorForm,SignupForm, LoginForm,ShopForm,StaffSignupForm,SupervisorSignupForm,ExpenseForm,EmployeeForm,ShopAccessRequestForm
+from .forms import DistributorForm,SignupForm, LoginForm,ShopForm,StaffSignupForm,SupervisorSignupForm,ExpenseForm,EmployeeForm,ShopAccessRequestForm,PartnerShopAccessRequestForm, PartnerSignupForm
 from django.contrib.auth.decorators import login_required
-from .models import CustomUser, Shop,SalaryExpense,Employee,Distributor,SupervisorShopAccess
+from .models import CustomUser, Shop,SalaryExpense,Employee,Distributor,SupervisorShopAccess,PartnerShopAccess
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Expense
@@ -36,6 +36,30 @@ def signup_view(request):
     else:
         form = SignupForm()
     return render(request, 'signup.html', {'form': form})
+
+def base(request):
+    if request.user.is_authenticated and request.user.role == 'admin':
+        pending_users_count = CustomUser.objects.filter(
+            Q(role='staff') | Q(role='supervisor'),
+            approval_status='pending',
+            shop__admin=request.user
+        ).count()
+        
+        pending_access_requests_count = SupervisorShopAccess.objects.filter(
+            shop__admin=request.user,
+            is_approved=False
+        ).count()
+        
+        pending_requests_count = pending_users_count + pending_access_requests_count
+    else:
+        pending_requests_count = 0
+    
+    context = {
+        # ... your existing context ...
+        'pending_requests_count': pending_requests_count,
+    }
+    
+    return render(request, 'base.html', context)
 
 def staff_signup_view(request):
     if request.method == 'POST':
@@ -113,8 +137,17 @@ def login_view(request):
                     is_approved=True
                 ).exists():
                     return redirect('request_shop_access')
+            # Handle partner redirect - ADD THIS SECTION
+            if user.role == 'partner':
+                if not PartnerShopAccess.objects.filter(
+                    partner=user,
+                    is_approved=True
+                ).exists():
+                    return redirect('request_partner_shop_access')
             
             return redirect('dashboard')
+        
+        
     else:
         form = LoginForm()
     return render(request, 'login.html', {'form': form})
@@ -122,6 +155,33 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+# @login_required
+# def create_shop(request):
+#     if request.user.role != 'admin':
+#         return redirect('dashboard')
+
+#     if request.method == 'POST':
+#         form = ShopForm(request.POST)
+#         if form.is_valid():
+#             try:
+#                 shop = form.save(commit=False)
+#                 shop.admin = request.user
+#                 shop.save()
+#                 messages.success(request, f"Shop '{shop.name}' created successfully with code: {shop.shop_code}")
+#                 return redirect('shop_list')
+#             except IntegrityError as e:
+#                 if 'shop_code' in str(e):
+#                     messages.error(request, "Shop creation failed due to a duplicate code. Please try again.")
+#                     # Regenerate the form with the same data but new code
+#                     return render(request, 'create_shop.html', {'form': form})
+#                 raise e
+#     else:
+#         form = ShopForm()
+    
+#     return render(request, 'create_shop.html', {'form': form})
+
+
+from django.utils.crypto import get_random_string
 @login_required
 def create_shop(request):
     if request.user.role != 'admin':
@@ -130,18 +190,21 @@ def create_shop(request):
     if request.method == 'POST':
         form = ShopForm(request.POST)
         if form.is_valid():
-            try:
-                shop = form.save(commit=False)
-                shop.admin = request.user
-                shop.save()
-                messages.success(request, f"Shop '{shop.name}' created successfully with code: {shop.shop_code}")
-                return redirect('shop_list')
-            except IntegrityError as e:
-                if 'shop_code' in str(e):
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    shop = form.save(commit=False)
+                    shop.admin = request.user
+                    shop.save()
+                    messages.success(request, f"Shop '{shop.name}' created successfully with code: {shop.shop_code}")
+                    return redirect('shop_list')
+                except IntegrityError as e:
+                    if 'shop_code' in str(e) and attempt < max_retries - 1:
+                        # Regenerate the code and try again
+                        shop.shop_code = get_random_string(8).upper()
+                        continue
                     messages.error(request, "Shop creation failed due to a duplicate code. Please try again.")
-                    # Regenerate the form with the same data but new code
                     return render(request, 'create_shop.html', {'form': form})
-                raise e
     else:
         form = ShopForm()
     
@@ -257,6 +320,40 @@ def dashboard_view(request):
         if not accessible_shops.exists():
             messages.info(request, "You don't have access to any shops yet. Please request access.")
             return redirect('request_shop_access')
+            
+        # Get selected shop from session or request
+        shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
+        
+        if shop_id:
+            try:
+                shop = accessible_shops.get(id=shop_id)
+                request.session['active_shop_id'] = shop.id
+            except Shop.DoesNotExist:
+                shop = accessible_shops.first()
+                request.session['active_shop_id'] = shop.id
+        else:
+            shop = accessible_shops.first()
+            request.session['active_shop_id'] = shop.id
+            
+        context = {
+            'shop': shop,
+            'shops': accessible_shops,
+            'active_shop_id': shop.id,
+            'show_admin_features': False
+        }
+        return render(request, 'dashboard_admin.html', context)
+    
+    # For partner users (similar to supervisor)
+    elif request.user.role == 'partner':
+        # Get all approved shops for this partner
+        accessible_shops = Shop.objects.filter(
+            partner_accesses__partner=request.user,
+            partner_accesses__is_approved=True
+        ).distinct()
+        
+        if not accessible_shops.exists():
+            messages.info(request, "You don't have access to any shops yet. Please request access.")
+            return redirect('request_partner_shop_access')
             
         # Get selected shop from session or request
         shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
@@ -459,6 +556,18 @@ def get_active_shop(request):
             supervisor_accesses__supervisor=request.user,  # Changed here
             supervisor_accesses__is_approved=True
         )
+
+    elif request.user.role == 'partner':
+        shop_id = request.session.get('active_shop_id')
+        if not shop_id:
+            messages.error(request, "Please select a shop first")
+            return None
+        return get_object_or_404(
+            Shop, 
+            id=shop_id,
+            partner_accesses__partner=request.user,
+            partner_accesses__is_approved=True
+        )
     return request.user.shop
 
 @login_required
@@ -613,7 +722,7 @@ from decimal import Decimal
 
 @login_required
 def expense_list(request):
-    # Get the active shop for the user
+        # Get the active shop for the user
     if request.user.role == 'admin':
         shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
         if not shop_id:
@@ -644,7 +753,26 @@ def expense_list(request):
             request.session['active_shop_id'] = shop.id
         except Shop.DoesNotExist:
             messages.error(request, "You don't have access to this shop")
-            return redirect('dashboard')        
+            return redirect('dashboard') 
+
+    elif request.user.role == 'partner':
+        # Get shop from session or request
+        shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
+        if not shop_id:
+            messages.error(request, "Please select a shop first")
+            return redirect('dashboard')
+            
+        try:
+            # Verify partner has access to this shop
+            shop = Shop.objects.get(
+                id=shop_id,
+                partner_accesses__partner=request.user,
+                partner_accesses__is_approved=True
+            )
+            request.session['active_shop_id'] = shop.id
+        except Shop.DoesNotExist:
+            messages.error(request, "You don't have access to this shop")
+            return redirect('dashboard')       
     else:
         try:
             shop = request.user.shop
@@ -827,8 +955,8 @@ def expense_list(request):
         'is_supervisor': request.user.role == 'supervisor',
         'is_admin': request.user.role == 'admin',
         'is_staff': request.user.role == 'staff',
+        'is_partner': request.user.role == 'partner',
     }
-
     
 
     return render(request, 'expense_list.html', context)
@@ -1167,19 +1295,39 @@ def recalculate_summaries(shop, start_date):
 
 @login_required
 def view_daily_summary(request):
-    # Get the active shop
+    # Only allow admin and partner users
+    if request.user.role not in ['admin', 'partner']:
+        messages.error(request, "You don't have permission to view this page")
+        return redirect('dashboard')
+
+    # Get the active shop based on user role
     if request.user.role == 'admin':
         shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
         if not shop_id:
             messages.error(request, "Please select a shop first")
             return redirect('dashboard')
         shop = get_object_or_404(Shop, id=shop_id, admin=request.user)
-        request.session['active_shop_id'] = shop.id  # Persist in session
-    else:
-        if not hasattr(request.user, 'shop'):
-            messages.error(request, "No shop assigned to your account")
-            return redirect('logout')
-        shop = request.user.shop
+        request.session['active_shop_id'] = shop.id
+        
+    elif request.user.role == 'partner':
+        # For partners, get shop from session or request
+        shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
+        if not shop_id:
+            messages.error(request, "Please select a shop first")
+            return redirect('dashboard')
+            
+        try:
+            # Verify partner has access to this shop
+            shop = get_object_or_404(
+                Shop, 
+                id=shop_id,
+                partner_accesses__partner=request.user,
+                partner_accesses__is_approved=True
+            )
+            request.session['active_shop_id'] = shop.id
+        except Shop.DoesNotExist:
+            messages.error(request, "You don't have access to this shop")
+            return redirect('dashboard')
 
     # Handle date selection
     selected_date = None
@@ -1201,29 +1349,26 @@ def view_daily_summary(request):
     except DailySaleSummary.DoesNotExist:
         message = "No summary data found for the selected date."
 
-    # Calculate daily totals - UPDATED FOR NEW MODEL STRUCTURE
+    # Calculate daily totals
     expense_items_total = (
-                ExpenseItem.objects
-                .filter(expense__shop=shop, date=selected_date)
-                .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-            )
+        ExpenseItem.objects
+        .filter(expense__shop=shop, date=selected_date)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
 
     salary_total = (
-                SalaryExpense.objects
-                .filter(employee__shop=shop, date=selected_date)
-                .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-            )
+        SalaryExpense.objects
+        .filter(employee__shop=shop, date=selected_date)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
 
     online_payment_total = (
-                OnlinePayment.objects
-                .filter(expense__shop=shop, date=selected_date)
-                .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-            )
+        OnlinePayment.objects
+        .filter(expense__shop=shop, date=selected_date)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
 
-            # Calculate financial metrics
     total_expense = expense_items_total + salary_total
-            # total_sale = cash_in_box + cash_in_account + total_expense
-            # daily_benefit = total_sale - total_expense - online_payment_total
 
     # Prepare last 7 days data for chart
     date_range = [selected_date - timedelta(days=i) for i in range(6, -1, -1)]
@@ -1279,11 +1424,13 @@ def view_daily_summary(request):
         'last_7_days': last_7_days,
         'monthly_data': monthly_data,
         'today': timezone.now().date(),
-        'total_expense':total_expense,
-        'online_payment_total':online_payment_total
+        'total_expense': total_expense,
+        'online_payment_total': online_payment_total,
+        'is_supervisor': request.user.role == 'supervisor',
+        'is_admin': request.user.role == 'admin',
+        'is_staff': request.user.role == 'staff',
+        'is_partner': request.user.role == 'partner',
     })
-
-
 
 @login_required
 def employee_list(request):
@@ -1354,6 +1501,49 @@ def add_distributor(request):
         'shop': shop
     })
 
+# @login_required
+# def edit_distributor(request, pk):
+#     shop = get_active_shop(request)
+#     if not shop:
+#         return redirect('dashboard')
+    
+#     distributor = get_object_or_404(Distributor, pk=pk, shop=shop)
+    
+#     if request.method == 'POST':
+#         form = DistributorForm(request.POST, instance=distributor, shop=shop)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, "Distributor updated successfully")
+#             return redirect('distributor_list')
+#     else:
+#         form = DistributorForm(instance=distributor, shop=shop)
+    
+#     return render(request, 'distributor_form.html', {
+#         'form': form,
+#         'title': 'Edit Distributor',
+#         'shop': shop
+#     })
+
+# @login_required
+# def delete_distributor(request, pk):
+#     shop = get_active_shop(request)
+#     if not shop:
+#         return redirect('dashboard')
+    
+#     distributor = get_object_or_404(Distributor, pk=pk, shop=shop)
+    
+#     if request.method == 'POST':
+#         distributor.delete()
+#         messages.success(request, "Distributor deleted successfully")
+#         return redirect('distributor_list')
+    
+#     return render(request, 'confirm_delete.html', {
+#         'distributor': distributor,
+#         'shop': shop
+#     })
+
+
+
 @login_required
 def edit_distributor(request, pk):
     shop = get_active_shop(request)
@@ -1371,10 +1561,12 @@ def edit_distributor(request, pk):
     else:
         form = DistributorForm(instance=distributor, shop=shop)
     
-    return render(request, 'distributors/distributor_form.html', {
+    # Use the same template as add_distributor but with edit context
+    return render(request, 'add_distributors.html', {
         'form': form,
         'title': 'Edit Distributor',
-        'shop': shop
+        'shop': shop,
+        'edit': True  # Add this flag to differentiate between add/edit
     })
 
 @login_required
@@ -1388,13 +1580,16 @@ def delete_distributor(request, pk):
     if request.method == 'POST':
         distributor.delete()
         messages.success(request, "Distributor deleted successfully")
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
         return redirect('distributor_list')
     
+    # For GET requests, show confirmation (if you want to keep this option)
     return render(request, 'confirm_delete.html', {
         'distributor': distributor,
         'shop': shop
     })
-
 
 # views.py
 @login_required
@@ -1507,6 +1702,7 @@ from django.utils import timezone
 import logging
 
 logger = logging.getLogger(__name__)
+
 @require_POST
 @login_required
 def mark_payment_paid(request, payment_id):
@@ -1557,10 +1753,28 @@ def mark_payment_paid(request, payment_id):
                 'message': 'Payment is already marked as paid'
             }, status=400)
 
-        # Mark as paid - using direct assignment instead of model method
+        # Get payment date from request
+        data = json.loads(request.body)
+        payment_date_str = data.get('payment_date')
+        
+        if payment_date_str:
+            try:
+                payment_date = timezone.datetime.strptime(payment_date_str, '%Y-%m-%d')
+                # Make sure the date is timezone aware
+                if timezone.is_naive(payment_date):
+                    payment_date = timezone.make_aware(payment_date)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid date format'
+                }, status=400)
+        else:
+            payment_date = timezone.now()
+
+        # Mark as paid
         payment.status = 'paid'
         payment.paid_by = request.user
-        payment.paid_at = timezone.now()
+        payment.paid_at = payment_date
         try:
             payment.save(update_fields=['status', 'paid_by', 'paid_at'])
         except Exception as e:
@@ -1598,13 +1812,11 @@ def mark_payment_paid(request, payment_id):
             'success': False,
             'message': 'Internal server error'
         }, status=500)
-    
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from .models import OnlinePayment, Shop  # Make sure to import your Shop model
-
 class ShopBillsView(LoginRequiredMixin, TemplateView):
     template_name = 'shop_bills.html'
     
@@ -1615,49 +1827,148 @@ class ShopBillsView(LoginRequiredMixin, TemplateView):
         shop_id = self.request.GET.get('shop_id') or self.request.session.get('active_shop_id')
         
         if not shop_id:
-            # Handle case where no shop_id is provided
-            # You might want to redirect or show an error
-            pass
+            # Redirect to dashboard if no shop_id is provided
+            from django.shortcuts import redirect
+            from django.contrib import messages
+            messages.error(self.request, "Please select a shop first")
+            return redirect('dashboard')
             
-        # Get the shop object
+        # Get the shop object with permission check
         shop = get_object_or_404(Shop, id=shop_id)
+        
+        # Check if user has permission to view this shop's bills
+        if self.request.user.role == 'admin':
+            if shop.admin != self.request.user:
+                messages.error(self.request, "You don't have permission to view this shop's bills")
+                return redirect('dashboard')
+        elif self.request.user.role == 'supervisor':
+            from .models import SupervisorShopAccess
+            if not SupervisorShopAccess.objects.filter(
+                supervisor=self.request.user,
+                shop=shop,
+                is_approved=True
+            ).exists():
+                messages.error(self.request, "You don't have permission to view this shop's bills")
+                return redirect('dashboard')
+        elif self.request.user.role == 'staff':
+            if self.request.user.shop != shop:
+                messages.error(self.request, "You don't have permission to view this shop's bills")
+                return redirect('dashboard')
         
         # Get unpaid bills
         unpaid_bills = OnlinePayment.objects.filter(
             status='unpaid',
             expense__shop=shop
-        ).select_related('distributor', 'expense')
+        ).select_related('distributor', 'expense').order_by('date')
         
-        # Get recently paid bills (last 10)
+        # Get recently paid bills (last 50)
         paid_bills = OnlinePayment.objects.filter(
             status='paid',
             expense__shop=shop
-        ).select_related('distributor', 'paid_by').order_by('-paid_at')[:10]
+        ).select_related('distributor', 'paid_by').order_by('-paid_at')[:50]
         
         context.update({
             'unpaid_bills': unpaid_bills,
             'paid_bills': paid_bills,
-            'shop': shop  # Pass the actual shop object
+            'shop': shop
         })
         return context
-from django.http import JsonResponse
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
+from django.utils import timezone
+import json
+from .models import OnlinePayment, Shop
+from django.shortcuts import get_object_or_404
 
 class MarkBillPaidView(LoginRequiredMixin, View):
     def post(self, request, bill_id):
         try:
-            bill = OnlinePayment.objects.get(id=bill_id)
-            if bill.status != 'paid':
-                bill.status = 'paid'
-                bill.paid_by = request.user
-                bill.paid_at = timezone.now()
-                bill.save()
-                return JsonResponse({'success': True})
-            return JsonResponse({'success': False, 'error': 'Bill already paid'})
+            bill = OnlinePayment.objects.select_related(
+                'expense__shop', 
+                'distributor'
+            ).get(id=bill_id)
+            
+            # Check if user has permission for this shop
+            if request.user.role == 'admin':
+                if bill.expense.shop.admin != request.user:
+                    return JsonResponse({
+                        'success': False, 
+                        'message': 'You do not have permission for this payment'
+                    }, status=403)
+            elif request.user.role == 'supervisor':
+                # Check if supervisor has access to this shop
+                from .models import SupervisorShopAccess
+                if not SupervisorShopAccess.objects.filter(
+                    supervisor=request.user,
+                    shop=bill.expense.shop,
+                    is_approved=True
+                ).exists():
+                    return JsonResponse({
+                        'success': False, 
+                        'message': 'You do not have permission for this payment'
+                    }, status=403)
+            elif request.user.role == 'staff':
+                if request.user.shop != bill.expense.shop:
+                    return JsonResponse({
+                        'success': False, 
+                        'message': 'You do not have permission for this payment'
+                    }, status=403)
+            
+            if bill.status == 'paid':
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Bill already paid'
+                })
+            
+            # Get payment date from request
+            data = json.loads(request.body)
+            payment_date_str = data.get('payment_date')
+            
+            if payment_date_str:
+                try:
+                    payment_date = timezone.datetime.strptime(payment_date_str, '%Y-%m-%d').date()
+                    # Convert to timezone-aware datetime
+                    payment_datetime = timezone.make_aware(
+                        timezone.datetime.combine(payment_date, timezone.datetime.min.time())
+                    )
+                except ValueError:
+                    return JsonResponse({
+                        'success': False, 
+                        'message': 'Invalid date format. Use YYYY-MM-DD'
+                    }, status=400)
+            else:
+                payment_datetime = timezone.now()
+            
+            # Mark as paid
+            bill.status = 'paid'
+            bill.paid_by = request.user
+            bill.paid_at = payment_datetime
+            bill.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Payment #{bill.invoice_number} marked as paid',
+                'payment': {
+                    'invoice_number': bill.invoice_number or '-',
+                    'distributor': bill.distributor.name if bill.distributor else 'Unknown',
+                    'amount': str(bill.amount),
+                    'paid_at': bill.paid_at.strftime("%b %d, %Y") if bill.paid_at else 'Just now',
+                    # 'paid_by': bill.paid_by.get_full_name() if bill.paid_by else request.user.get_full_name()
+                    'invoice_date': bill.date.strftime("%b %d, %Y") if bill.date else 'Unknown'
+                }
+            })
+            
         except OnlinePayment.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Bill not found'}, status=404)
-
+            return JsonResponse({
+                'success': False, 
+                'error': 'Bill not found'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': f'Internal server error: {str(e)}'
+            }, status=500)
 
 @login_required
 def request_shop_access(request):
@@ -1725,7 +2036,7 @@ def approve_supervisor_access(request, access_id):
     except SupervisorShopAccess.DoesNotExist:
         messages.error(request, "Access request not found or already approved")
 
-    return redirect('manage_supervisor_access')
+    return redirect('combined_approvals')
 
 @login_required
 def reject_supervisor_access(request, access_id):
@@ -1742,7 +2053,7 @@ def reject_supervisor_access(request, access_id):
     except SupervisorShopAccess.DoesNotExist:
         messages.error(request, "Access request not found")
 
-    return redirect('manage_supervisor_access')
+    return redirect('combined_approvals')
 # @login_required
 # def combined_approvals(request):
 #     if request.user.role != 'admin':
@@ -1775,6 +2086,93 @@ def reject_supervisor_access(request, access_id):
 #     })
 
 
+# @login_required
+# def combined_approvals(request):
+#     if request.user.role != 'admin':
+#         return redirect('dashboard')
+    
+#     # Get pending user approvals
+#     pending_users = CustomUser.objects.filter(
+#         Q(role='staff') | Q(role='supervisor'),
+#         approval_status='pending',
+#         shop__admin=request.user
+#     ).select_related('shop')
+    
+#     # Get pending supervisor access requests
+#     pending_access_requests = SupervisorShopAccess.objects.filter(
+#         shop__admin=request.user,
+#         is_approved=False
+#     ).select_related('supervisor', 'shop')
+
+
+#     # Get pending partner access requests
+#     pending_partner_requests = PartnerShopAccess.objects.filter(
+#         shop__admin=request.user,
+#         is_approved=False
+#     ).select_related('partner', 'shop')
+    
+#     # Get approved staff (non-supervisors)
+#     approved_staff = CustomUser.objects.filter(
+#         role='staff',
+#         approval_status='approved',
+#         shop__admin=request.user
+#     ).select_related('shop')
+    
+#     # Get approved supervisors with their shop accesses
+#     approved_supervisors = CustomUser.objects.filter(
+#         role='supervisor',
+#         approval_status='approved'
+#     ).prefetch_related(
+#         'supervisor_accesses',
+#         'supervisor_accesses__shop'
+#     )
+
+#     # Get approved partners with their shop accesses
+#     approved_partners = CustomUser.objects.filter(
+#         role='partner',
+#         approval_status='approved'
+#     ).prefetch_related(
+#         'partner_accesses',
+#         'partner_accesses__shop'
+#     )
+    
+#     # Create a list of supervisors with their shop accesses
+#     supervisors_with_shops = []
+#     for supervisor in approved_supervisors:
+#         accesses = SupervisorShopAccess.objects.filter(
+#             supervisor=supervisor,
+#             shop__admin=request.user,
+#             is_approved=True
+#         ).select_related('shop')
+#         if accesses.exists():
+#             supervisors_with_shops.append({
+#                 'supervisor': supervisor,
+#                 'shops': [access.shop for access in accesses]
+#             })
+
+    
+#     partners_with_shops = []
+#     for partner in approved_partners:
+#         accesses = PartnerShopAccess.objects.filter(
+#             partner=partner,
+#             shop__admin=request.user,
+#             is_approved=True
+#         ).select_related('shop')
+#         if accesses.exists():
+#             partners_with_shops.append({
+#                 'partner': partner,
+#                 'shops': [access.shop for access in accesses]
+#             })
+    
+#     return render(request, 'combined_approvals.html', {
+#         'pending_users': pending_users,
+#         'pending_access_requests': pending_access_requests,
+#         'approved_staff': approved_staff,
+#         'supervisors_with_shops': supervisors_with_shops
+#     })
+
+
+# views.py - update combined_approvals
 @login_required
 def combined_approvals(request):
     if request.user.role != 'admin':
@@ -1782,18 +2180,24 @@ def combined_approvals(request):
     
     # Get pending user approvals
     pending_users = CustomUser.objects.filter(
-        Q(role='staff') | Q(role='supervisor'),
+        Q(role='staff') | Q(role='supervisor') | Q(role='partner'),
         approval_status='pending',
         shop__admin=request.user
     ).select_related('shop')
     
     # Get pending supervisor access requests
-    pending_access_requests = SupervisorShopAccess.objects.filter(
+    pending_supervisor_requests = SupervisorShopAccess.objects.filter(
         shop__admin=request.user,
         is_approved=False
     ).select_related('supervisor', 'shop')
     
-    # Get approved staff (non-supervisors)
+    # Get pending partner access requests
+    pending_partner_requests = PartnerShopAccess.objects.filter(
+        shop__admin=request.user,
+        is_approved=False
+    ).select_related('partner', 'shop')
+    
+    # Get approved staff (non-supervisors/partners)
     approved_staff = CustomUser.objects.filter(
         role='staff',
         approval_status='approved',
@@ -1809,7 +2213,16 @@ def combined_approvals(request):
         'supervisor_accesses__shop'
     )
     
-    # Create a list of supervisors with their shop accesses
+    # Get approved partners with their shop accesses
+    approved_partners = CustomUser.objects.filter(
+        role='partner',
+        approval_status='approved'
+    ).prefetch_related(
+        'partner_accesses',
+        'partner_accesses__shop'
+    )
+    
+    # Create lists of supervisors and partners with their shop accesses
     supervisors_with_shops = []
     for supervisor in approved_supervisors:
         accesses = SupervisorShopAccess.objects.filter(
@@ -1823,12 +2236,29 @@ def combined_approvals(request):
                 'shops': [access.shop for access in accesses]
             })
     
+    partners_with_shops = []
+    for partner in approved_partners:
+        accesses = PartnerShopAccess.objects.filter(
+            partner=partner,
+            shop__admin=request.user,
+            is_approved=True
+        ).select_related('shop')
+        if accesses.exists():
+            partners_with_shops.append({
+                'partner': partner,
+                'shops': [access.shop for access in accesses]
+            })
+    
     return render(request, 'combined_approvals.html', {
         'pending_users': pending_users,
-        'pending_access_requests': pending_access_requests,
+        'pending_supervisor_requests': pending_supervisor_requests,
+        'pending_partner_requests': pending_partner_requests,
         'approved_staff': approved_staff,
-        'supervisors_with_shops': supervisors_with_shops
+        'supervisors_with_shops': supervisors_with_shops,
+        'partners_with_shops': partners_with_shops
     })
+
+
 @login_required
 def revoke_supervisor_access(request, user_id):
     if request.method != 'POST' or request.user.role != 'admin':
@@ -1855,6 +2285,166 @@ def revoke_supervisor_access(request, user_id):
             # Revoke all accesses (if no shop specified)
             SupervisorShopAccess.objects.filter(
                 supervisor=user,
+                shop__admin=request.user
+            ).delete()
+            messages.success(request, f"All access revoked for {user.username}")
+            
+    except Exception as e:
+        messages.error(request, f"Error revoking access: {str(e)}")
+    
+    return redirect('combined_approvals')
+
+
+
+def partner_signup_view(request):
+    if request.method == 'POST':
+        form = PartnerSignupForm(request.POST)
+        if form.is_valid():
+            try:
+                user = form.save()
+                print(f"User created: {user.id}, {user.email}, {user.role}")  # Debug
+                print(f"User is_active: {user.is_active}")  # Debug
+                print(f"User approval_status: {user.approval_status}")  # Debug
+                
+                login(request, user)
+                print(f"User authenticated: {request.user.is_authenticated}")  # Debug
+                print(f"Logged in user: {request.user.id}")  # Debug
+                
+                messages.success(
+                    request,
+                    "Account created successfully! Please request access to shops."
+                )
+                return redirect('request_partner_shop_access')
+            except Exception as e:
+                print(f"Error in partner signup: {e}")  # Debug
+                messages.error(request, f"Error creating account: {str(e)}")
+        else:
+            print(f"Form errors: {form.errors}")  # Debug
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = PartnerSignupForm()
+
+    return render(request, 'partner_signup.html', {
+        'form': form,
+        'title': 'Partner Registration'
+    })
+@login_required
+def request_partner_shop_access(request):
+    if request.user.role != 'partner':
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = PartnerShopAccessRequestForm(request.POST)
+        if form.is_valid():
+            try:
+                shop = form.cleaned_data['shop_code']
+                # Check if access already requested
+                if PartnerShopAccess.objects.filter(partner=request.user, shop=shop).exists():
+                    messages.warning(request, f"You have already requested access to {shop.name}")
+                else:
+                    PartnerShopAccess.objects.create(
+                        partner=request.user,
+                        shop=shop,
+                        is_approved=False
+                    )
+                    messages.success(request, f"Access requested for {shop.name}. Waiting for admin approval.")
+                return redirect('my_partner_shop_access')
+            except Exception as e:
+                messages.error(request, f"Error requesting access: {str(e)}")
+    else:
+        form = PartnerShopAccessRequestForm()
+
+    return render(request, 'request_partner_shop_access.html', {'form': form})
+
+@login_required
+def my_partner_shop_access(request):
+    if request.user.role != 'partner':
+        return redirect('dashboard')
+
+    accesses = PartnerShopAccess.objects.filter(partner=request.user)
+    return render(request, 'my_partner_shop_access.html', {'accesses': accesses})
+
+@login_required
+def manage_partner_access(request):
+    if request.user.role != 'admin':
+        return redirect('dashboard')
+
+    # Get pending access requests for shops this admin owns
+    pending_requests = PartnerShopAccess.objects.filter(
+        shop__admin=request.user,
+        is_approved=False
+    ).select_related('partner', 'shop')
+
+    return render(request, 'manage_partner_access.html', {
+        'pending_requests': pending_requests
+    })
+# views.py
+@login_required
+def approve_partner_access(request, access_id):
+    if request.method != 'POST' or request.user.role != 'admin':
+        return redirect('dashboard')
+
+    try:
+        access = PartnerShopAccess.objects.get(
+            id=access_id,
+            shop__admin=request.user,
+            is_approved=False
+        )
+        access.is_approved = True
+        access.approved_at = timezone.now()
+        access.approved_by = request.user
+        access.save()
+        messages.success(request, f"Access to {access.shop.name} approved for {access.partner.username}")
+    except PartnerShopAccess.DoesNotExist:
+        messages.error(request, "Access request not found or already approved")
+
+    return redirect('combined_approvals')
+
+@login_required
+def reject_partner_access(request, access_id):
+    if request.method != 'POST' or request.user.role != 'admin':
+        return redirect('dashboard')
+
+    try:
+        access = PartnerShopAccess.objects.get(
+            id=access_id,
+            shop__admin=request.user
+        )
+        access.delete()
+        messages.success(request, f"Access request rejected")
+    except PartnerShopAccess.DoesNotExist:
+        messages.error(request, "Access request not found")
+
+    return redirect('combined_approvals')
+
+@login_required
+def revoke_partner_access(request, user_id):
+    if request.method != 'POST' or request.user.role != 'admin':
+        return redirect('dashboard')
+
+    try:
+        user = get_object_or_404(
+            CustomUser,
+            id=user_id,
+            role='partner'
+        )
+        
+        shop_id = request.GET.get('shop_id')
+        
+        if shop_id:
+            # Revoke access for a specific shop
+            shop = get_object_or_404(Shop, id=shop_id, admin=request.user)
+            PartnerShopAccess.objects.filter(
+                partner=user,
+                shop=shop
+            ).delete()
+            messages.success(request, f"Access revoked for {user.username} at {shop.name}")
+        else:
+            # Revoke all accesses (if no shop specified)
+            PartnerShopAccess.objects.filter(
+                partner=user,
                 shop__admin=request.user
             ).delete()
             messages.success(request, f"All access revoked for {user.username}")

@@ -63,6 +63,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'expenseapp.context_processors.shop_context',
+                'expenseapp.context_processors.pending_requests',
             ],
         },
     },
@@ -125,3 +126,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'expenseapp.CustomUser'
 
+# settings.py
+LOGIN_URL = '/'  # This points to the root path
+#LOGIN_REDIRECT_URL = 'dashboard'  # Where to redirect after successful login
+LOGOUT_REDIRECT_URL = '/'  # Where to redirect after logout

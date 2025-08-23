@@ -4,7 +4,7 @@
     <div class="row justify-content-center">
         <div class="col-xxl-10">
             <!-- Dashboard Header with Gradient Background -->
-            <div class="card mb-4 border-0 overflow-hidden">
+            <div class="card mb-4 border-0 ">
                 <div class="card-header position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="bg-pattern-dark opacity-50"></div>
                     <div class="position-relative z-index-1">
@@ -16,12 +16,12 @@
                                 <p class="text-white-50 mb-0">Welcome back, {{ request.user.username }}</p>
                             </div>
                             <div class="d-flex align-items-center">
-                            {% if shops|length > 1 and request.user.role in 'admin supervisor' %}
-                            <div class="dropdown me-3">
-                                <button class="btn btn-light btn-sm dropdown-toggle rounded-pill shadow-sm" type="button" id="shopDropdown" data-bs-toggle="dropdown">
+                            {% if shops|length > 1 and request.user.role in 'admin supervisor partner' %}
+                            <div class="dropdown me-3 shop-dropdown-container">
+                                <button class="btn btn-light btn-sm dropdown-toggle rounded-pill shadow-sm" type="button" id="shopDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-store me-1"></i> Switch Shop
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
+                                <ul class="dropdown-menu dropdown-menu-end shop-dropdown-menu" aria-labelledby="shopDropdown">
                                     {% for s in shops %}
                                         {% if s.id != shop.id %}
                                         <li>
@@ -50,11 +50,11 @@
                         <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
                             <div class="d-inline-flex align-items-center">
                                 <div class="avatar avatar-lg bg-primary bg-opacity-10 rounded-circle me-3">
-                                    <i class="fas fa-user-shield fs-3 text-primary"></i>
+                                    <i class="fas fa-user-tie fs-3 text-primary"></i>
                                 </div>
                                 <div>
                                     <h5 class="mb-0">{{ request.user.get_full_name|default:request.user.username }}</h5>
-                                    <span class="badge bg-{% if request.user.role == 'admin' %}danger{% else %}info{% endif %} bg-opacity-10 text-{% if request.user.role == 'admin' %}danger{% else %}info{% endif %} rounded-pill">
+                                    <span class="badge bg-{% if request.user.role == 'admin' %}danger{% elif request.user.role == 'supervisor' %}info{% else %}success{% endif %} bg-opacity-10 text-{% if request.user.role == 'admin' %}danger{% elif request.user.role == 'supervisor' %}info{% else %}success{% endif %} rounded-pill">
                                         {{ request.user.get_role_display }}
                                     </span>
                                 </div>
@@ -67,33 +67,38 @@
                             </a>
                         </div>
                         {% endif %}
+                        {% if request.user.role == 'partner' %}
+                        <div class="col-md-6 text-center text-md-end">
+                            <a href="{% url 'request_partner_shop_access' %}" class="btn btn-sm btn-outline-success rounded-pill">
+                                <i class="fas fa-plus-circle me-1"></i> Request New Shop Access
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Stats Cards -->
-            
-
             <!-- Quick Actions -->
             <h4 class="mb-4 fw-bold text-dark">Quick Actions</h4>
             <div class="row">
-                <!-- Reports Card - Admin Only -->
-                {% if request.user.role == 'admin' %}
+                
+                <!-- Reports Card - Admin & Partner Only -->
+                {% if request.user.role in 'admin partner' %}
                 <div class="col-md-6 col-xl-4 mb-4">
                     <div class="card h-100 border-0 shadow-sm-hover">
                         <div class="card-body p-4">
                             <div class="d-flex">
                                 <div class="rounded p-3 me-4 d-flex align-items-center justify-content-center" 
                                     style="width: 60px; height: 120px; background-color: rgba(214, 51, 132, 0.1);">
-                                    <i class="fas fa-users fs-3" style="color: #d63384;"></i>
+                                    <i class="fas fa-chart-line fs-3" style="color: #d63384;"></i>
                                 </div>
                                 <div class="flex-grow-1">
                                     <h5 class="mb-2">Reports</h5>
                                     <p class="text-muted small mb-3">View financial reports and analytics</p>
                                     <a href="{% url 'view_daily_summary' %}?shop_id={{ shop.id }}" 
-   class="btn btn-sm btn-pink-outline rounded-pill stretched-link">
-   View Daily Summary
-</a>
+                                        class="btn btn-sm btn-pink-outline rounded-pill stretched-link">
+                                        View Daily Summary
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -101,7 +106,7 @@
                 </div>
                 {% endif %}
 
-                <!-- Expense Card -->
+                <!-- Expense Card - All Users -->
                 <div class="col-md-6 col-xl-4 mb-4">
                     <div class="card h-100 border-0 shadow-sm-hover">
                         <div class="card-body p-4">
@@ -121,7 +126,8 @@
                     </div>
                 </div>
 
-                <!-- Distributors Card -->
+                <!-- Distributors Card - Admin & Supervisor Only -->
+                {% if request.user.role in 'admin supervisor' %}
                 <div class="col-md-6 col-xl-4 mb-4">
                     <div class="card h-100 border-0 shadow-sm-hover">
                         <div class="card-body p-4">
@@ -140,9 +146,33 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
+                <!-- Staff Members Card - Admin & Supervisor Only -->
+                {% if request.user.role in 'admin supervisor' %}
+                <div class="col-md-6 col-xl-4 mb-4">
+                    <div class="card h-100 border-0 shadow-sm-hover">
+                        <div class="card-body p-4">
+                            <div class="d-flex">
+                                <div class="rounded p-3 me-4 d-flex align-items-center justify-content-center" 
+                                    style="width: 60px; height: 120px; background-color: rgba(111, 66, 193, 0.1);">
+                                    <i class="fas fa-users fs-3" style="color: #6f42c1;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-2">Staff Members</h5>
+                                    <p class="text-muted small mb-3">Manage your team members</p>
+                                    <a href="{% url 'employee_list' %}?shop_id={{ shop.id }}" class="btn btn-sm btn-outline-purple rounded-pill stretched-link">
+                                        Manage Staff 
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Online Payments Card - Admin Only -->
                 {% if request.user.role == 'admin' %}
-
                 <div class="col-md-6 col-xl-4 mb-4">
                     <div class="card h-100 border-0 shadow-sm-hover">
                         <div class="card-body p-4">
@@ -156,34 +186,15 @@
                                     <a href="{% url 'shop_bills' %}?shop_id={{ shop.id }}" class="btn btn-sm btn-outline-success rounded-pill stretched-link">
                                         View Bills
                                     </a>
-                                    <!-- href="{% url 'shop_bills' shop_id=request.session.active_shop_id %}" -->
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
-                <div class="col-md-6 col-xl-4 mb-4">
-                    <div class="card h-100 border-0 shadow-sm-hover">
-                        <div class="card-body p-4">
-                            <div class="d-flex">
-                                <div class="rounded p-3 me-4 d-flex align-items-center justify-content-center" 
-                                    style="width: 60px; height: 120px; background-color: rgba(111, 66, 193, 0.1);">
-                                    <i class="fas fa-users fs-3" style="color: #6f42c1;"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h5 class="mb-2">Staff</h5>
-                                    <p class="text-muted small mb-3">Manage your team members</p>
-                                    <a href="{% url 'employee_list' %}?shop_id={{ shop.id }}" class="btn btn-sm btn-outline-purple rounded-pill stretched-link">
-                                        Manage Staff 
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Approvals Card -->
+                <!-- My Shops Card - Admin Only -->
+                {% if request.user.role == 'admin' %}
                 <div class="col-md-6 col-xl-4 mb-4">
                     <div class="card h-100 border-0 shadow-sm-hover">
                         <div class="card-body p-4">
@@ -202,104 +213,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Staff Management Card -->
-                
-                
-                
-                
-                
                 {% endif %}
-            </div>
-
-            <!-- Recent Activity Section -->
-            
-        </div>
-    </div>
-</div>
-
-<!-- Quick Stats Modal -->
-<div class="modal fade" id="quickStatsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-chart-pie me-2"></i>Detailed Statistics</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body text-center py-4">
-                                <div class="bg-primary bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
-                                    <i class="fas fa-rupee-sign fs-2 text-primary"></i>
-                                </div>
-                                <h6 class="text-muted mb-2">Today's Income</h6>
-                                <h3 class="text-primary">₹{{ daily_stats.income|default:"0.00" }}</h3>
-                                <div class="text-success small mt-2">
-                                    <i class="fas fa-arrow-up me-1"></i> 12% from yesterday
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body text-center py-4">
-                                <div class="bg-danger bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
-                                    <i class="fas fa-receipt fs-2 text-danger"></i>
-                                </div>
-                                <h6 class="text-muted mb-2">Today's Expenses</h6>
-                                <h3 class="text-danger">₹{{ daily_stats.expenses|default:"0.00" }}</h3>
-                                <div class="text-danger small mt-2">
-                                    <i class="fas fa-arrow-up me-1"></i> 8% from yesterday
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body text-center py-4">
-                                <div class="bg-success bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
-                                    <i class="fas fa-chart-line fs-2 text-success"></i>
-                                </div>
-                                <h6 class="text-muted mb-2">Daily Profit</h6>
-                                <h3 class="text-success">₹{{ daily_stats.benefit|default:"0.00" }}</h3>
-                                <div class="text-success small mt-2">
-                                    <i class="fas fa-arrow-up me-1"></i> 15% from yesterday
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body text-center py-4">
-                                <div class="bg-warning bg-opacity-10 rounded-circle p-3 mb-3 d-inline-block">
-                                    <i class="fas fa-users fs-2 text-warning"></i>
-                                </div>
-                                <h6 class="text-muted mb-2">Active Staff</h6>
-                                <h3 class="text-warning">{{ daily_stats.staff_count|default:"0" }}</h3>
-                                <div class="text-muted small mt-2">
-                                    <i class="fas fa-user-clock me-1"></i> 2 pending approvals
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0">Weekly Performance</h6>
-                        <div class="badge bg-primary bg-opacity-10 text-primary rounded-pill">This Week</div>
-                    </div>
-                    <div class="chart-container" style="height: 200px;">
-                        <canvas id="weeklyChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
-                <a href="{% url 'view_daily_summary' %}?shop_id={{ shop.id }}" class="btn btn-primary rounded-pill">
-                    <i class="fas fa-file-alt me-1"></i> View Full Report
-                </a>
             </div>
         </div>
     </div>
@@ -329,37 +243,22 @@
     }
 
     .bg-pink { background-color: #d63384; }
-  .text-pink { color: #d63384; }
+    .text-pink { color: #d63384; }
+    
     .btn-pink-outline {
-    border: 1px solid #e24995;
-    color: #e24995;
-    transition: all 0.3s ease;
-    background-color: transparent;
-}
+        border: 1px solid #e24995;
+        color: #e24995;
+        transition: all 0.3s ease;
+        background-color: transparent;
+    }
 
-.btn-pink-outline:hover {
-    background-color: #e24995 !important;
-    color: white !important;
-}  
+    .btn-pink-outline:hover {
+        background-color: #e24995 !important;
+        color: white !important;
+    }  
 
     .bg-gradient-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .bg-gradient-danger {
-        background: linear-gradient(135deg, #f54ea2 0%, #ff7676 100%);
-    }
-    
-    .bg-gradient-success {
-        background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%);
-    }
-    
-    .bg-gradient-warning {
-        background: linear-gradient(135deg, #ffb347 0%, #ffcc33 100%);
-    }
-    
-    .bg-gradient-purple {
-        background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
     }
     
     .bg-pattern-dark {
@@ -386,22 +285,6 @@
         transform: translateY(-3px);
     }
     
-    .shadow-primary-sm {
-        box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
-    }
-    
-    .shadow-danger-sm {
-        box-shadow: 0 4px 14px rgba(245, 78, 162, 0.3);
-    }
-    
-    .shadow-success-sm {
-        box-shadow: 0 4px 14px rgba(66, 230, 149, 0.3);
-    }
-    
-    .shadow-warning-sm {
-        box-shadow: 0 4px 14px rgba(255, 179, 71, 0.3);
-    }
-    
     .avatar {
         display: inline-flex;
         align-items: center;
@@ -410,64 +293,50 @@
         height: 60px;
     }
     
-    .rounded-xl {
-        border-radius: 1rem !important;
-    }
-    
-    .chart-container {
+    .shop-dropdown-container {
         position: relative;
     }
     
+    .shop-dropdown-menu {
+        position: fixed !important; 
+        z-index: 9999 !important; 
+        right: 1rem;
+        left: auto;
+        width: 300px;
+        max-height: 70vh;
+        overflow-y: auto;
+        margin-top: 0.5rem;
+    }
+    
     @media (max-width: 767.98px) {
-        .card-header h2 {
-            font-size: 1.5rem;
+        .shop-dropdown-menu {
+            position: fixed !important;
+            width: calc(100vw - 2rem);
+            right: 1rem;
+            left: 1rem;
+            max-width: unset;
         }
         
-        .quick-stats h3 {
+        .card-header h2 {
             font-size: 1.5rem;
         }
     }
 </style>
 
 <script>
-    // Initialize weekly chart when modal is shown
-    document.getElementById('quickStatsModal').addEventListener('shown.bs.modal', function() {
-        var ctx = document.getElementById('weeklyChart').getContext('2d');
-        var weeklyChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Income',
-                    data: [12000, 19000, 15000, 18000, 22000, 25000, 20000],
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                }, {
-                    label: 'Expenses',
-                    data: [4000, 5000, 4500, 6000, 5500, 7000, 6500],
-                    borderColor: '#f54ea2',
-                    backgroundColor: 'rgba(245, 78, 162, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        const shopDropdown = document.getElementById('shopDropdown');
+        if (shopDropdown) {
+            shopDropdown.addEventListener('shown.bs.dropdown', function () {
+                const dropdownMenu = this.nextElementSibling;
+                const windowHeight = window.innerHeight;
+                const menuHeight = dropdownMenu.scrollHeight;
+                const maxHeight = Math.min(menuHeight, windowHeight * 0.6);
+                
+                dropdownMenu.style.maxHeight = maxHeight + 'px';
+                dropdownMenu.style.overflowY = 'auto';
+            });
+        }
     });
 </script>
 {% endblock %}

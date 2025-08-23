@@ -8,7 +8,6 @@
     
     <!-- Favicon -->
     
-    
     <!-- Bootstrap CSS CDN with fallback -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     
@@ -24,7 +23,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
-            <i class="fas fa-calculator me-2"></i>Shop Manager
+            <i class="fas fa-calculator me-2"></i>Income - Expense App
         </a>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -38,21 +37,56 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-home me-1"></i> Dashboard</a>
                 </li>
+                
                 {% if user.role == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'shop_list' %}"><i class="fas fa-store me-1"></i> My Shops</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'combined_approvals' %}"><i class="fas fa-money-bill-wave me-1"></i>Staff requests</a>
+                        <a class="nav-link" href="{% url 'combined_approvals' %}">
+                            <i class="fas fa-user-clock me-1"></i>
+                            <span class="position-relative">
+                                Staff requests
+                                {% if pending_requests_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    style="font-size: 0.6rem; padding: 0.25em 0.45em;">
+                                    {{ pending_requests_count }}
+                                    <span class="visually-hidden">Pending requests</span>
+                                </span>
+                                {% endif %}
+                            </span>
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'view_daily_summary' %}"><i class="fas fa-money-bill-wave me-1"></i>Reports</a>
+                        <a class="nav-link" href="{% url 'view_daily_summary' %}">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Reports
+                        </a>
                     </li>
-                    
-                    <!-- <li class="nav-item">
-                        <a class="nav-link" href="{% url 'manage_supervisor_access' %}"><i class="fas fa-money-bill-wave me-1"></i>Reports</a>
-                    </li> -->
-                    
+                {% endif %}
+
+                {% if user.role == 'supervisor' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'my_shop_access' %}">
+                            <i class="fas fa-store me-1"></i>
+                            My Shop Access
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% if user.role == 'partner' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'view_daily_summary' %}">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'my_partner_shop_access' %}">
+                            <i class="fas fa-store me-1"></i>
+                            My Shop Access
+                        </a>
+                    </li>
                 {% endif %}
                 
                 <li class="nav-item">
@@ -105,13 +139,15 @@
 
     <!-- Footer -->
     
-
     <!-- JavaScript -->
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     
     <!-- Custom JS -->
-    
+
+    <style>
+       
+    </style>
     
     {% block extra_js %}{% endblock %}
 </body>

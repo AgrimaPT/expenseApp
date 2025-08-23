@@ -29,7 +29,7 @@
                             <th>Invoice #</th>
                             <th>Distributor</th>
                             <th>Amount</th>
-                            <th>Due Date</th>
+                            <th>Invoice Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -42,7 +42,10 @@
                             <td>{{ bill.date|date:"M d, Y" }}</td>
                             <td>
                                 <button class="btn btn-sm btn-success mark-paid-btn" 
-                                        data-bill-id="{{ bill.id }}">
+                                        data-bill-id="{{ bill.id }}"
+                                        data-bill-invoice="{{ bill.invoice_number|default:'-' }}"
+                                        data-bill-distributor="{{ bill.distributor.name }}"
+                                        data-bill-amount="{{ bill.amount }}">
                                     <i class="fas fa-check me-1"></i>Mark Paid
                                 </button>
                             </td>
@@ -62,11 +65,20 @@
 
     <!-- Paid Bills Section -->
     <div class="card shadow-sm paid-bills-card">
-        <div class="card-header bg-success bg-opacity-10">
+        <div class="card-header bg-success bg-opacity-10 d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
                 <i class="fas fa-check-circle text-success me-2"></i>
                 Recently Paid Bills
             </h5>
+            <div class="search-container" style="max-width: 300px;">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="paid-bills-search" class="form-control" placeholder="Search paid bills...">
+                    <button class="btn btn-outline-secondary" type="button" id="clear-search">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -76,18 +88,20 @@
                             <th>Invoice #</th>
                             <th>Distributor</th>
                             <th>Amount</th>
+                            <th>Invoice Date</th>
                             <th>Paid On</th>
-                            
+                            <!-- <th>Paid By</th> -->
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="paid-bills-body">
                         {% for bill in paid_bills %}
-                        <tr>
-                            <td>{{ bill.invoice_number|default:"-" }}</td>
-                            <td>{{ bill.distributor.name }}</td>
-                            <td>₹{{ bill.amount }}</td>
-                            <td>{{ bill.paid_at|date:"M d, Y" }}</td>
-                            
+                        <tr class="paid-bill-row">
+                            <td class="invoice-number">{{ bill.invoice_number|default:"-" }}</td>
+                            <td class="distributor">{{ bill.distributor.name }}</td>
+                            <td class="amount">₹{{ bill.amount }}</td>
+                            <td class="invoice-date">{{ bill.date|date:"M d, Y" }}</td>
+                            <td class="paid-date">{{ bill.paid_at|date:"M d, Y" }}</td>
+                            <!-- <td>{{ bill.paid_by.get_full_name }}</td> -->
                         </tr>
                         {% empty %}
                         <tr class="no-paid-bills-message">
@@ -98,6 +112,36 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <div id="no-search-results" class="text-center text-muted py-4" style="display: none;">
+                    No matching bills found
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Selection Modal -->
+<div class="modal fade" id="paymentDateModal" tabindex="-1" aria-labelledby="paymentDateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentDateModalLabel">Mark Payment as Paid</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <p class="mb-1"><strong>Invoice:</strong> <span id="modal-invoice"></span></p>
+                    <p class="mb-1"><strong>Distributor:</strong> <span id="modal-distributor"></span></p>
+                    <p class="mb-3"><strong>Amount:</strong> ₹<span id="modal-amount"></span></p>
+                </div>
+                <div class="mb-3">
+                    <label for="payment-date" class="form-label">Payment Date</label>
+                    <input type="date" class="form-control" id="payment-date" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-payment-btn">Confirm Payment</button>
             </div>
         </div>
     </div>
@@ -107,46 +151,70 @@
 <div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 11"></div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 $(document).ready(function() {
+    let currentBillId = null;
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentDateModal'));
+    
+    // Set today's date as default in the date input
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    $('#payment-date').val(formattedDate);
+    
     // Handle mark as paid button click
     $('.mark-paid-btn').click(function() {
-        const billId = $(this).data('bill-id');
-        const row = $(this).closest('tr');
+        currentBillId = $(this).data('bill-id');
+        
+        // Populate modal with bill details
+        $('#modal-invoice').text($(this).data('bill-invoice'));
+        $('#modal-distributor').text($(this).data('bill-distributor'));
+        $('#modal-amount').text($(this).data('bill-amount'));
+        
+        // Show the modal
+        paymentModal.show();
+    });
+    
+    // Handle confirm payment button click
+    $('#confirm-payment-btn').click(function() {
+        const paymentDate = $('#payment-date').val();
+        
+        if (!paymentDate) {
+            showToast('Please select a payment date', 'warning');
+            return;
+        }
+        
+        const row = $(`.mark-paid-btn[data-bill-id="${currentBillId}"]`).closest('tr');
+        const billInvoice = $(`.mark-paid-btn[data-bill-id="${currentBillId}"]`).data('bill-invoice');
+        const billDistributor = $(`.mark-paid-btn[data-bill-id="${currentBillId}"]`).data('bill-distributor');
+        const billAmount = $(`.mark-paid-btn[data-bill-id="${currentBillId}"]`).data('bill-amount');
+        const billDate = row.find('td:eq(3)').text(); // Get the invoice date from the table
         
         $.ajax({
-            url: `/mark-bill-paid/${billId}/`,
+            url: `/mark-bill-paid/${currentBillId}/`,
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
                 'Content-Type': 'application/json'
             },
+            data: JSON.stringify({
+                payment_date: paymentDate
+            }),
             success: function(response) {
                 if(response.success) {
-                    // Move row to paid table
+                    // Close the modal
+                    paymentModal.hide();
+                    
+                    // Remove the row from unpaid table
                     row.fadeOut(300, function() {
-                        const paidTable = $('.paid-bills-table tbody');
-                        const newRow = `
-                            <tr>
-                                <td>${row.find('td:eq(0)').text()}</td>
-                                <td>${row.find('td:eq(1)').text()}</td>
-                                <td>${row.find('td:eq(2)').text()}</td>
-                                <td>${new Date().toLocaleDateString()}</td>
-                                <td>{{ request.user.get_full_name }}</td>
-                            </tr>
-                        `;
-                        
-                        // Prepend to paid table
-                        if($('.no-paid-bills-message').length) {
-                            $('.no-paid-bills-message').remove();
-                        }
-                        paidTable.prepend(newRow);
+                        $(this).remove();
                         
                         // Update unpaid count
-                        const unpaidCount = $('.unpaid-bill-row').length - 1;
+                        const unpaidCount = $('.unpaid-bill-row').length;
                         $('.badge.bg-danger').text(unpaidCount);
                         
+                        // If no unpaid bills left, show message
                         if(unpaidCount === 0) {
                             $('.unpaid-bills-table tbody').html(`
                                 <tr>
@@ -158,14 +226,114 @@ $(document).ready(function() {
                         }
                     });
                     
-                    showToast('Bill marked as paid successfully!', 'success');
+                    // Add to paid table using the response data from server
+                    const paidTable = $('#paid-bills-body');
+                    const newRow = `
+                        <tr class="paid-bill-row">
+                            <td class="invoice-number">${response.payment.invoice_number}</td>
+                            <td class="distributor">${response.payment.distributor}</td>
+                            <td class="amount">₹${response.payment.amount}</td>
+                            <td class="invoice-date">${billDate}</td>
+                            <td class="paid-date">${response.payment.paid_at}</td>
+                        </tr>
+                    `;
+                    
+                    // Remove "no paid bills" message if it exists
+                    if($('.no-paid-bills-message').length) {
+                        $('.no-paid-bills-message').remove();
+                    }
+                    
+                    // Hide "no search results" message if it's showing
+                    $('#no-search-results').hide();
+                    
+                    // Prepend to paid table
+                    paidTable.prepend(newRow);
+                    
+                    // showToast(response.message, 'success');
+                } else {
+                    showToast('Error: ' + (response.message || response.error), 'danger');
                 }
             },
             error: function(xhr) {
-                showToast('Error marking bill as paid: ' + xhr.responseJSON.error, 'danger');
+                let errorMsg = 'Error marking bill as paid';
+                try {
+                    if (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) {
+                        errorMsg += ': ' + (xhr.responseJSON.message || xhr.responseJSON.error);
+                    }
+                } catch (e) {
+                    errorMsg += '. Please try again.';
+                }
+                showToast(errorMsg, 'danger');
             }
         });
     });
+    
+    // Search functionality for paid bills
+    $('#paid-bills-search').on('keyup', function() {
+        const searchText = $(this).val().toLowerCase().trim();
+        
+        if (searchText === '') {
+            // Show all rows if search is empty
+            $('.paid-bill-row').show();
+            $('.no-paid-bills-message').show();
+            $('#no-search-results').hide();
+            return;
+        }
+        
+        let foundResults = false;
+        
+        // Hide the "no paid bills" message during search
+        $('.no-paid-bills-message').hide();
+        
+        // Search through all paid bill rows
+        $('.paid-bill-row').each(function() {
+            const invoiceNumber = $(this).find('.invoice-number').text().toLowerCase();
+            const distributor = $(this).find('.distributor').text().toLowerCase();
+            const amount = $(this).find('.amount').text().toLowerCase();
+            const invoiceDate = $(this).find('.invoice-date').text().toLowerCase();
+            const paidDate = $(this).find('.paid-date').text().toLowerCase();
+            
+            // Check if any field contains the search text
+            if (invoiceNumber.includes(searchText) || 
+                distributor.includes(searchText) || 
+                amount.includes(searchText) || 
+                invoiceDate.includes(searchText) || 
+                paidDate.includes(searchText)) {
+                $(this).show();
+                foundResults = true;
+            } else {
+                $(this).hide();
+            }
+        });
+        
+        // Show appropriate message based on search results
+        if (foundResults) {
+            $('#no-search-results').hide();
+        } else {
+            $('#no-search-results').show();
+        }
+    });
+    
+    // Clear search functionality
+    $('#clear-search').click(function() {
+        $('#paid-bills-search').val('').trigger('keyup');
+    });
+    
+    // Allow pressing Escape to clear search
+    $('#paid-bills-search').on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            $(this).val('').trigger('keyup');
+        }
+    });
+    
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
     
     function showToast(message, type) {
         const toast = $(`
@@ -207,6 +375,23 @@ $(document).ready(function() {
         margin-bottom: 0.5rem;
     }
 
+    .search-container {
+        transition: all 0.3s ease;
+    }
+
+    .search-container:focus-within {
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        border-radius: 0.375rem;
+    }
+
+    #clear-search {
+        transition: all 0.2s ease;
+    }
+
+    #clear-search:hover {
+        background-color: #f8f9fa;
+    }
+
     @media (max-width: 768px) {
         .table-responsive {
             font-size: 0.9rem;
@@ -216,6 +401,26 @@ $(document).ready(function() {
             padding: 0.25rem 0.5rem;
             font-size: 0.8rem;
         }
+        
+        .card-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+        
+        .search-container {
+            max-width: 100% !important;
+        }
+    }
+
+    /* Highlight search results */
+    .paid-bill-row:not([style*="display: none"]) {
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 </style>
 {% endblock %}

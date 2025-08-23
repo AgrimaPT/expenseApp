@@ -20,7 +20,7 @@
         </div>
 
         <div class="card-body px-0 px-md-4">
-            <form method="POST" class="needs-validation" novalidate>
+            <form method="POST" class="needs-validation" novalidate id="salary-form">
                 {% csrf_token %}
                 
                 <!-- Date Selection -->
@@ -78,10 +78,11 @@
                                         <span class="input-group-text bg-white">₹</span>
                                         <input type="number" name="salary_{{ employee.id }}" 
                                                class="form-control text-end salary-input"
-                                               step="0.01" min="0" required
+                                               step="0.01" min="0"
                                                value="{{ existing_salary.amount|default_if_none:'' }}"
                                                onchange="formatCurrency(this)"
-                                               {% if existing_salary %}disabled{% endif %}>
+                                               {% if existing_salary %}disabled{% endif %}
+                                               placeholder="0.00">
                                     </div>
                                 </td>
                                 <td class="text-center">
@@ -120,9 +121,7 @@
                     <button type="submit" class="btn btn-primary px-4 py-2">
                         <i class="fas fa-paper-plane me-2"></i>Submit Salaries
                     </button>
-                    <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary px-4 py-2">
-                        <i class="fas fa-users me-2"></i>Manage Employees
-                    </a>
+                    
                 </div>
             </form>
         </div>
@@ -168,27 +167,94 @@
         }
     });
 
-    // Form validation
+    // Form validation and processing
     (function() {
         'use strict';
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.prototype.slice.call(forms).forEach(function(form) {
-            form.addEventListener('submit', function(event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    
-                    // Scroll to first invalid input
-                    const firstInvalid = form.querySelector(':invalid');
-                    if (firstInvalid) {
-                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        firstInvalid.focus();
+        const form = document.getElementById('salary-form');
+        
+        form.addEventListener('submit', function(event) {
+            // Prevent default validation
+            event.preventDefault();
+            
+            // Process all salary inputs - set empty values to 0
+            const salaryInputs = form.querySelectorAll('.salary-input:not([disabled])');
+            let hasValidData = false;
+            
+            salaryInputs.forEach(input => {
+                // If input is empty or invalid, set it to 0
+                if (!input.value || isNaN(parseFloat(input.value)) || parseFloat(input.value) < 0) {
+                    input.value = '0.00';
+                } else {
+                    // Format valid input
+                    input.value = parseFloat(input.value).toFixed(2);
+                    if (parseFloat(input.value) > 0) {
+                        hasValidData = true;
                     }
                 }
+            });
+            
+            // Optional: Check if at least one employee has a salary > 0
+            // if (!hasValidData) {
+            //     if (!confirm('No salaries have been entered. Do you want to continue with all salaries as 0?')) {
+            //         return false;
+            //     }
+            // }
+            
+            // Remove the novalidate attribute to allow HTML5 validation for other fields
+            form.removeAttribute('novalidate');
+            
+            // Check form validity
+            if (form.checkValidity()) {
+                form.submit();
+            } else {
+                // Scroll to first invalid input (date field)
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.focus();
+                }
                 form.classList.add('was-validated');
-            }, false);
-        });
+            }
+        }, false);
     })();
+
+    // Optional: Add a button to clear all salary inputs
+    function addClearAllButton() {
+        const buttonContainer = document.querySelector('.d-flex.flex-column.flex-md-row');
+        const clearButton = document.createElement('button');
+        clearButton.type = 'button';
+        clearButton.className = 'btn btn-outline-danger px-4 py-2';
+        clearButton.innerHTML = '<i class="fas fa-trash-alt me-2"></i>Clear All';
+        clearButton.onclick = function() {
+            if (confirm('Are you sure you want to clear all salary amounts?')) {
+                document.querySelectorAll('.salary-input:not([disabled])').forEach(input => {
+                    input.value = '';
+                });
+            }
+        };
+        buttonContainer.appendChild(clearButton);
+    }
+
+    // Add clear button if there are employees
+    {% if employees %}
+    document.addEventListener('DOMContentLoaded', addClearAllButton);
+    {% endif %}
+
+    // Auto-format inputs on blur
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.salary-input').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value) {
+                    const value = parseFloat(this.value);
+                    if (!isNaN(value) && value >= 0) {
+                        this.value = value.toFixed(2);
+                    } else {
+                        this.value = '0.00';
+                    }
+                }
+            });
+        });
+    });
 </script>
 
 <style>
@@ -258,6 +324,18 @@
     .badge {
         font-weight: 500;
         padding: 0.35em 0.65em;
+    }
+    
+    /* Style for disabled inputs */
+    .salary-input:disabled {
+        background-color: #f8f9fa;
+        opacity: 0.8;
+    }
+    
+    /* Style for placeholder text */
+    .salary-input::placeholder {
+        color: #6c757d;
+        opacity: 0.6;
     }
     
     @media (max-width: 768px) {

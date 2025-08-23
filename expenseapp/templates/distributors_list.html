@@ -30,13 +30,17 @@
                             <td>{{ distributor.contact_person|default:"-" }}</td>
                             <td>{{ distributor.phone|default:"-" }}</td>
                             <td>
-                                <a href="{% url 'edit_distributor' distributor.id %}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i> Edit
-                                </a>
-                                <a href="{% url 'delete_distributor' distributor.id %}" class="btn btn-sm btn-outline-danger">
-                                    <i class="fas fa-trash"></i> Delete
-                                </a>
-                            </td>
+    <a href="{% url 'edit_distributor' distributor.id %}" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-edit"></i> Edit
+    </a>
+    <form method="post" action="{% url 'delete_distributor' distributor.id %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                onclick="return confirm('Are you sure you want to delete this distributor?');">
+            <i class="fas fa-trash"></i> Delete
+        </button>
+    </form>
+</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -49,4 +53,9 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Example using Fetch API
+
+</script>
 {% endblock %}

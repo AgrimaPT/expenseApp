@@ -1,63 +1,264 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container py-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h4 class="mb-0">
-                <i class="fas fa-user-plus me-2"></i>Add New Employee
-            </h4>
-        </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="{{ form.name.id_for_label }}" class="form-label">Full Name</label>
-                        {{ form.name }}
-                        {% if form.name.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ form.name.errors|first }}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <label for="{{ form.phone.id_for_label }}" class="form-label">Phone Number</label>
-                        {{ form.phone }}
-                        {% if form.phone.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ form.phone.errors|first }}
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="{{ form.position.id_for_label }}" class="form-label">Position</label>
-                        {{ form.position }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Status</label>
-                        <div class="form-check form-switch">
-                            {{ form.is_active }}
-                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                                Active Employee
-                            </label>
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <!-- Header Card -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h4 class="mb-0 fw-semibold">
+                                <i class="fas fa-user-plus me-2"></i>Add New Employee
+                            </h4>
+                            <small class="opacity-75">Fill in the details to add a new team member</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-white text-primary fs-6">New</span>
                         </div>
                     </div>
                 </div>
-                
-                <div class="d-flex justify-content-between">
-                    <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i> Back to List
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> Save Employee
-                    </button>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Personal Information Section -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3 fw-semibold">
+                                <i class="fas fa-user-circle me-2"></i>Personal Information
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <!-- Name Field -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.name }}
+                                        <label for="{{ form.name.id_for_label }}">
+                                            <i class="fas fa-signature me-1 text-muted"></i>Full Name
+                                        </label>
+                                    </div>
+                                    {% if form.name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.name.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Phone Field -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.phone }}
+                                        <label for="{{ form.phone.id_for_label }}">
+                                            <i class="fas fa-phone me-1 text-muted"></i>Phone Number
+                                        </label>
+                                    </div>
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.phone.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employment Details Section -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3 fw-semibold">
+                                <i class="fas fa-briefcase me-2"></i>Employment Details
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <!-- Position Field -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.position }}
+                                        <label for="{{ form.position.id_for_label }}">
+                                            <i class="fas fa-user-tie me-1 text-muted"></i>Position/Role
+                                        </label>
+                                    </div>
+                                    {% if form.position.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.position.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Status Field -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 bg-light">
+                                        <div class="card-body d-flex align-items-center justify-content-center">
+                                            <div class="form-check form-switch mb-0">
+                                                <input type="checkbox" class="form-check-input" id="id_is_active" name="is_active" {% if form.is_active.value %}checked{% endif %}>
+                                                <label class="form-check-label fw-medium ms-2" for="id_is_active">
+                                                    <i class="fas fa-user-check me-2 text-success"></i>
+                                                    Active Employee
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 pt-3 border-top">
+                            <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary btn-lg flex-fill flex-md-grow-0">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                <span class="d-none d-md-inline">Back to List</span>
+                                <span class="d-md-none">Back</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg flex-fill flex-md-grow-0">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Add Employee
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
+
+            <!-- Help Text -->
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    All fields are required unless marked optional. Employee will be added to {{ shop.name }}.
+                </p>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 15px;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+    
+    .card-header {
+        border-radius: 15px 15px 0 0 !important;
+        border: none;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+    }
+    
+    .form-floating {
+        position: relative;
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        height: calc(3.5rem + 2px);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        transform: translateY(-1px);
+    }
+    
+    /* Custom checkbox switch styles */
+    .form-check-input {
+        width: 3em !important;
+        height: 1.5em !important;
+        cursor: pointer;
+    }
+    
+    .form-check-input:checked {
+        background-color: #198754 !important;
+        border-color: #198754 !important;
+    }
+    
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
+    }
+    
+    .btn {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        border: none;
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+    }
+    
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .d-flex.flex-md-row {
+            flex-direction: column;
+        }
+        
+        .form-check-input {
+            width: 2.5em !important;
+            height: 1.25em !important;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form-control class to all form fields except checkbox
+        const formFields = document.querySelectorAll('input:not([type="checkbox"]), select, textarea');
+        formFields.forEach(field => {
+            field.classList.add('form-control');
+        });
+        
+        // Add form-select class to select fields
+        const selectFields = document.querySelectorAll('select');
+        selectFields.forEach(select => {
+            select.classList.add('form-select');
+        });
+        
+        // Ensure checkbox has proper classes
+        const checkbox = document.querySelector('#id_is_active');
+        if (checkbox) {
+            checkbox.classList.add('form-check-input');
+        }
+    });
+</script>
 {% endblock %}

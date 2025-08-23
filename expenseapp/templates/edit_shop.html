@@ -1,12 +1,305 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-    <h2>Edit Shop: {{ shop.name }}</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <a href="{% url 'shop_list' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <!-- Header Card -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-1 fw-bold">
+                                <i class="fas fa-store me-2"></i>Edit Shop
+                            </h3>
+                            <p class="mb-0 opacity-75">Update details for {{ shop.name }}</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-white text-primary fs-6">
+                                <i class="fas fa-edit me-1"></i>Edit Mode
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Shop Information Section -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3 fw-semibold">
+                                <i class="fas fa-info-circle me-2"></i>Shop Information
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <!-- Name Field -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.name }}
+                                        <label for="{{ form.name.id_for_label }}">
+                                            <i class="fas fa-signature me-1 text-muted"></i>Shop Name
+                                        </label>
+                                    </div>
+                                    {% if form.name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.name.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Owner Name Field -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.owner_name }}
+                                        <label for="{{ form.owner_name.id_for_label }}">
+                                            <i class="fas fa-user-tie me-1 text-muted"></i>Owner Name
+                                        </label>
+                                    </div>
+                                    {% if form.owner_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.owner_name.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information Section -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3 fw-semibold">
+                                <i class="fas fa-phone me-2"></i>Contact Information
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <!-- Phone Field -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.phone }}
+                                        <label for="{{ form.phone.id_for_label }}">
+                                            <i class="fas fa-phone-alt me-1 text-muted"></i>Phone Number
+                                        </label>
+                                    </div>
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.phone.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Email Field -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.email }}
+                                        <label for="{{ form.email.id_for_label }}">
+                                            <i class="fas fa-envelope me-1 text-muted"></i>Email Address
+                                        </label>
+                                    </div>
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.email.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Section -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3 fw-semibold">
+                                <i class="fas fa-map-marker-alt me-2"></i>Address
+                            </h6>
+                            
+                            <div class="form-floating">
+                                {{ form.address }}
+                                <label for="{{ form.address.id_for_label }}">
+                                    <i class="fas fa-location-dot me-1 text-muted"></i>Shop Address
+                                </label>
+                            </div>
+                            {% if form.address.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    {{ form.address.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Shop Code Display (Read-only) -->
+                        <div class="alert alert-info border-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-qrcode fs-4 me-3 text-primary"></i>
+                                <div>
+                                    <strong>Shop Code:</strong>
+                                    <span class="badge bg-primary ms-2 fs-6">{{ shop.shop_code }}</span>
+                                    <small class="d-block text-muted mt-1">This code is unique and cannot be changed</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 pt-4 border-top">
+                            <a href="{% url 'shop_list' %}" class="btn btn-outline-secondary btn-lg flex-fill flex-md-grow-0">
+                                <i class="fas fa-times me-2"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg flex-fill flex-md-grow-0">
+                                <i class="fas fa-save me-2"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Text -->
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="fas fa-lightbulb me-1"></i>
+                    Make sure all information is accurate. Changes will be reflected immediately.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 15px;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+    
+    .card-header {
+        border-radius: 15px 15px 0 0 !important;
+        border: none;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+    }
+    
+    .form-floating {
+        position: relative;
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .form-control, .form-select, textarea {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        height: calc(3.5rem + 2px);
+    }
+    
+    textarea.form-control {
+        height: auto;
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .form-control:focus, .form-select:focus, textarea:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        transform: translateY(-1px);
+    }
+    
+    .btn {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        border: none;
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+    }
+    
+    .alert-info {
+        border-radius: 12px;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border: none;
+    }
+    
+    .badge {
+        font-size: 0.9em;
+        padding: 0.5em 0.8em;
+    }
+    
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .d-flex.flex-md-row {
+            flex-direction: column;
+        }
+        
+        .alert-info {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form-control class to all form fields
+        const formFields = document.querySelectorAll('input, select, textarea');
+        formFields.forEach(field => {
+            field.classList.add('form-control');
+        });
+        
+        // Add specific styling to textarea
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+            textarea.style.minHeight = '120px';
+            textarea.style.resize = 'vertical';
+        }
+        
+        // Add form validation
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+</script>
 {% endblock %}
