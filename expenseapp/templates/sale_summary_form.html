@@ -20,9 +20,11 @@
             <span class="fw-medium">{{ selected_date|date:"F j, Y" }}</span>
         </div>
         {% endif %}
+        {% if request.user.role == 'admin' %}
         <a href="{% url 'view_daily_summary' %}" class="btn btn-outline-light btn-sm">
             <i class="fas fa-list me-1"></i> View Summaries
         </a>
+        {% endif %}
     </div>
 </div>
     </div>
@@ -80,6 +82,7 @@
 
       {% if calculated %}
       <!-- Summary Dashboard -->
+      {% if request.user.role == 'admin' %}
       <div class="mt-4 pt-3 border-top">
         <h5 class="mb-3 text-primary">
           <i class="fas fa-file-invoice-dollar me-2"></i>
@@ -238,6 +241,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
       {% endif %}
     </div>
   </div>

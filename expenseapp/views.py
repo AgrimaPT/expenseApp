@@ -1093,21 +1093,137 @@ def add_online_payment(request):
         'shop': shop
     })
 
+# @login_required
+# def daily_sale_summary(request):
+#     # Get the active shop
+#     if request.user.role == 'admin':
+#         shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
+#         if not shop_id:
+#             messages.error(request, "Please select a shop first")
+#             return redirect('dashboard')
+#         shop = get_object_or_404(Shop, id=shop_id, admin=request.user)
+#         request.session['active_shop_id'] = shop.id  # Persist in session
+#     else:
+#         if not hasattr(request.user, 'shop'):
+#             messages.error(request, "No shop assigned to your account")
+#             return redirect('logout')
+#         shop = request.user.shop
+
+#     context = {
+#         'shop': shop,
+#         'calculated': False,
+#         'today': timezone.now().date()
+#     }
+
+#     if request.method == 'POST':
+#         try:
+#             # Get and validate input data
+#             date_str = request.POST.get('date', '')
+#             selected_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else timezone.now().date()
+            
+#             cash_in_box = Decimal(request.POST.get('cash_in_box', 0))
+#             cash_in_account = Decimal(request.POST.get('cash_in_account', 0))
+
+#             # Calculate daily totals - UPDATED FOR NEW MODEL STRUCTURE
+#             expense_items_total = (
+#                 ExpenseItem.objects
+#                 .filter(expense__shop=shop, date=selected_date)
+#                 .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+#             )
+
+#             salary_total = (
+#                 SalaryExpense.objects
+#                 .filter(employee__shop=shop, date=selected_date)
+#                 .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+#             )
+
+#             online_payment_total = (
+#                 OnlinePayment.objects
+#                 .filter(expense__shop=shop, date=selected_date)
+#                 .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+#             )
+
+#             # Calculate financial metrics
+#             total_expense = expense_items_total + salary_total
+#             total_sale = cash_in_box + cash_in_account + total_expense
+#             daily_benefit = total_sale - total_expense - online_payment_total
+
+#             # Calculate monthly cumulative benefit
+#             start_of_month = selected_date.replace(day=1)
+#             previous_daily_benefits = (
+#                 DailySaleSummary.objects
+#                 .filter(shop=shop, date__range=(start_of_month, selected_date - timedelta(days=1)))
+#                 .aggregate(total=Sum('daily_benefit'))['total'] or Decimal('0.00')
+#             )
+#             cumulative_monthly_benefit = previous_daily_benefits + daily_benefit
+
+#             # Save or update the summary
+#             DailySaleSummary.objects.update_or_create(
+#                 shop=shop,
+#                 date=selected_date,
+#                 defaults={
+#                     'remaining_cash': cash_in_box,
+#                     'cash_in_account': cash_in_account,
+#                     'total_sale': total_sale,
+#                     'daily_benefit': daily_benefit,
+#                     'cumulative_monthly_benefit': cumulative_monthly_benefit,
+#                 }
+#             )
+
+#             recalculate_summaries(shop, selected_date + timedelta(days=1))
+            
+#             messages.success(request, "Daily summary saved and recalculated successfully")
+
+#             context.update({
+#                 'calculated': True,
+#                 'selected_date': selected_date,
+#                 'cash_in_box': cash_in_box,
+#                 'cash_in_account': cash_in_account,
+#                 'expense_items_total': expense_items_total,
+#                 'salary_total': salary_total,
+#                 'total_expense': total_expense,
+#                 'online_payment_total': online_payment_total,
+#                 'total_sale': total_sale,
+#                 'daily_benefit': daily_benefit,
+#                 'monthly_benefit': cumulative_monthly_benefit,
+#             })
+#             messages.success(request, "Daily summary saved successfully")
+
+#         except (ValueError, TypeError) as e:
+#             messages.error(request, f"Invalid input data: {str(e)}")
+#         except Exception as e:
+#             messages.error(request, f"Error processing summary: {str(e)}")
+
+#     return render(request, 'sale_summary_form.html', context)
+
 @login_required
 def daily_sale_summary(request):
-    # Get the active shop
+    # Allow both admin and supervisor users
+    if request.user.role not in ['admin', 'supervisor']:
+        messages.error(request, "You don't have permission to access this page")
+        return redirect('dashboard')
+    
+    # Get the active shop based on user role
     if request.user.role == 'admin':
         shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
         if not shop_id:
             messages.error(request, "Please select a shop first")
             return redirect('dashboard')
         shop = get_object_or_404(Shop, id=shop_id, admin=request.user)
-        request.session['active_shop_id'] = shop.id  # Persist in session
-    else:
-        if not hasattr(request.user, 'shop'):
-            messages.error(request, "No shop assigned to your account")
-            return redirect('logout')
-        shop = request.user.shop
+    else:  # supervisor
+        shop_id = request.GET.get('shop_id') or request.session.get('active_shop_id')
+        if not shop_id:
+            messages.error(request, "Please select a shop first")
+            return redirect('dashboard')
+        # Verify supervisor has access to this shop
+        shop = get_object_or_404(
+            Shop, 
+            id=shop_id,
+            supervisor_accesses__supervisor=request.user,
+            supervisor_accesses__is_approved=True
+        )
+    
+    request.session['active_shop_id'] = shop.id  # Persist in session
 
     context = {
         'shop': shop,
@@ -1124,7 +1240,7 @@ def daily_sale_summary(request):
             cash_in_box = Decimal(request.POST.get('cash_in_box', 0))
             cash_in_account = Decimal(request.POST.get('cash_in_account', 0))
 
-            # Calculate daily totals - UPDATED FOR NEW MODEL STRUCTURE
+            # Calculate daily totals
             expense_items_total = (
                 ExpenseItem.objects
                 .filter(expense__shop=shop, date=selected_date)
@@ -1157,11 +1273,12 @@ def daily_sale_summary(request):
             )
             cumulative_monthly_benefit = previous_daily_benefits + daily_benefit
 
-            # Save or update the summary
+            # Save or update the summary - MAKE SURE shop IS PASSED CORRECTLY
             DailySaleSummary.objects.update_or_create(
-                shop=shop,
+                shop=shop,  # This is crucial - ensure shop is passed
                 date=selected_date,
                 defaults={
+                    'shop': shop,  # Add this line to ensure shop is set
                     'remaining_cash': cash_in_box,
                     'cash_in_account': cash_in_account,
                     'total_sale': total_sale,
@@ -1187,7 +1304,6 @@ def daily_sale_summary(request):
                 'daily_benefit': daily_benefit,
                 'monthly_benefit': cumulative_monthly_benefit,
             })
-            messages.success(request, "Daily summary saved successfully")
 
         except (ValueError, TypeError) as e:
             messages.error(request, f"Invalid input data: {str(e)}")
