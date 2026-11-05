@@ -1,6 +1,6 @@
 # ExpenseApp – Multi-Branch Restaurant Management System
 
-ExpenseApp is a web-based income and expense management application developed for a restaurant business operating multiple branches. It helps the owner monitor financial performance across branches while allowing managers and staff to manage daily financial activities through separate user accounts.
+Multi-branch restaurant financial management application that helps owners monitor income, expenses and branch performance, while managers and staff manage daily financial activities through role-based accounts.
 
 ## Features
 
